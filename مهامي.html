@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>مهامي</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1E1B4B;--ind:#6366F1;--ind-soft:#EEF2FF;
+  --p1:#EF4444;--p1bg:#FEF2F2;
+  --p2:#3B5BDB;--p2bg:#EEF2FF;
+  --p3:#F97316;--p3bg:#FFF7ED;
+  --p4:#9CA3AF;--p4bg:#F9FAFB;
+  --green:#22C55E;--gbg:#F0FDF4;
+  --purple:#8B5CF6;--pbg:#F5F3FF;
+  --g0:#F8F9FA;--g1:#F1F3F5;--bd:#E5E7EB;
+  --tx:#111827;--txm:#6B7280;--txl:#9CA3AF;
+  --sh:0 1px 4px rgba(0,0,0,.08);--r:12px;--rs:8px;
+}
+body{font-family:"Segoe UI",Arial,sans-serif;background:#F0F2F8;color:var(--tx);min-height:100vh}
+.app{max-width:800px;margin:0 auto;padding:14px}
+/* header */
+.hdr{background:var(--navy);color:#fff;border-radius:var(--r);padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.hdr h1{font-size:17px;font-weight:700;letter-spacing:.3px}
+.hdr .sub{font-size:11px;opacity:.6;margin-top:1px}
+.hdr-date{font-size:12px;opacity:.75;text-align:left}
+/* tabs */
+.tabs{display:flex;gap:3px;background:#fff;padding:4px;border-radius:var(--r);margin-bottom:12px;border:1px solid var(--bd);box-shadow:var(--sh)}
+.tab{flex:1;padding:8px 4px;border:none;background:transparent;cursor:pointer;border-radius:var(--rs);font-size:12px;color:var(--txm);font-family:inherit;transition:all .15s;font-weight:500}
+.tab.active{background:var(--ind);color:#fff}
+.tab:hover:not(.active){background:var(--g0)}
+/* cards */
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--sh)}
+.sec{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+/* quick add */
+.qadd{background:#fff;border:2px solid var(--ind);border-radius:var(--r);padding:12px;margin-bottom:12px;box-shadow:0 0 0 4px rgba(99,102,241,.08)}
+.qadd input[type=text]{width:100%;font-size:15px;font-family:inherit;border:none;outline:none;margin-bottom:10px;direction:rtl;color:var(--tx);background:transparent}
+.qadd input[type=text]::placeholder{color:var(--txl)}
+.prio-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pbtn{flex:1;min-width:0;padding:7px 6px;border:2px solid transparent;border-radius:var(--rs);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;white-space:nowrap}
+.pbtn.p1{background:var(--p1bg);color:var(--p1);border-color:var(--p1bg)}
+.pbtn.p2{background:var(--p2bg);color:var(--p2);border-color:var(--p2bg)}
+.pbtn.p3{background:var(--p3bg);color:var(--p3);border-color:var(--p3bg)}
+.pbtn.p4{background:var(--p4bg);color:var(--p4);border-color:var(--p4bg)}
+.pbtn.sel{border-color:currentColor;filter:brightness(.95)}
+.add-row{display:flex;gap:8px}
+.add-row select{flex:1;font-family:inherit;font-size:13px;direction:rtl;border:1px solid var(--bd);border-radius:var(--rs);padding:7px 10px;background:#fff;color:var(--tx);outline:none;margin:0}
+.add-row select:focus{border-color:var(--ind)}
+/* task items */
+.task-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--g1);cursor:default}
+.task-item:last-child{border-bottom:none}
+.task-cb{width:20px;height:20px;border-radius:6px;border:2px solid var(--bd);cursor:pointer;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.task-cb:hover{border-color:var(--ind)}
+.task-cb.done{background:var(--green);border-color:var(--green)}
+.task-cb.done::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
+.task-body{flex:1;min-width:0}
+.task-title{font-size:13px;font-weight:500;color:var(--tx);line-height:1.4}
+.task-title.done{text-decoration:line-through;color:var(--txl)}
+.task-meta{display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap}
+.task-actions{display:flex;gap:4px;flex-shrink:0}
+.ibtn{background:none;border:none;cursor:pointer;padding:3px 5px;border-radius:4px;font-size:13px;color:var(--txl);transition:all .15s}
+.ibtn:hover{background:var(--g1);color:var(--tx)}
+.ibtn.del:hover{background:var(--p1bg);color:var(--p1)}
+/* badges */
+.bdg{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;white-space:nowrap}
+.bdg.p1{background:var(--p1bg);color:var(--p1)}
+.bdg.p2{background:var(--p2bg);color:var(--p2)}
+.bdg.p3{background:var(--p3bg);color:var(--p3)}
+.bdg.p4{background:var(--p4bg);color:var(--p4)}
+.bdg.cat{background:var(--g1);color:var(--txm)}
+.bdg.today{background:#FFF0F6;color:#E64980;border:1px solid #FCC2D7}
+/* quadrant grid */
+.quad-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quad{border-radius:var(--r);padding:12px;border:1px solid var(--bd)}
+.quad-title{font-size:12px;font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(0,0,0,.06)}
+/* projects */
+.proj-card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--sh)}
+.proj-header{display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px}
+.phase-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g1)}
+.phase-item:last-child{border-bottom:none}
+.phase-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.phase-dot.active{background:var(--purple);box-shadow:0 0 0 3px rgba(139,92,246,.25)}
+.phase-dot.done{background:var(--green)}
+.phase-dot.todo{background:var(--g1);border:2px solid var(--bd)}
+.phase-label{font-size:13px;font-weight:500}
+.phase-label.done{text-decoration:line-through;color:var(--txl)}
+.phase-label.active{color:var(--purple);font-weight:700}
+.proj-progress{width:100%;height:5px;background:var(--g1);border-radius:3px;overflow:hidden;margin-top:6px}
+.proj-progress-bar{height:100%;background:var(--purple);border-radius:3px;transition:width .3s}
+/* habits */
+.habit-card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--sh)}
+.habit-streak{font-size:24px;font-weight:800;color:var(--green);line-height:1}
+.dots-row{display:flex;gap:4px;margin-top:6px}
+.day-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.day-dot.hit{background:var(--green);color:#fff}
+.day-dot.miss{background:var(--g1);color:var(--txm)}
+.day-dot.today-dot{background:var(--ind);color:#fff;width:32px;height:32px;font-size:11px;box-shadow:0 0 0 3px rgba(99,102,241,.2)}
+.habit-check{width:42px;height:42px;border-radius:50%;border:3px solid var(--green);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all .2s;background:#fff;flex-shrink:0}
+.habit-check.done{background:var(--green);border-color:var(--green)}
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:var(--r);width:100%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.modal-head{background:var(--navy);color:#fff;padding:14px 16px;border-radius:var(--r) var(--r) 0 0;display:flex;justify-content:space-between;align-items:center}
+.modal-head h3{font-size:14px;font-weight:700}
+.mclose{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;opacity:.8}
+.mclose:hover{opacity:1}
+.modal-body{padding:16px}
+.modal-foot{padding:12px 16px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end}
+/* forms */
+label{font-size:13px;color:var(--txm);display:block;margin-bottom:3px;font-weight:500}
+input,select,textarea{width:100%;margin-bottom:10px;font-family:inherit;font-size:13px;direction:rtl;border:1px solid var(--bd);border-radius:var(--rs);padding:8px 10px;background:#fff;color:var(--tx);outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--ind)}
+textarea{resize:vertical;min-height:60px}
+.btn{display:inline-block;padding:8px 14px;border:1px solid var(--bd);background:var(--g0);border-radius:var(--rs);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--tx);transition:all .15s}
+.btn:hover{background:var(--bd)}
+.btn.p{background:var(--ind);border-color:var(--ind);color:#fff}
+.btn.p:hover{background:#4F46E5}
+.btn.ok{background:var(--gbg);border-color:var(--green);color:#15803D}
+.btn.dn{background:var(--p1bg);border-color:var(--p1);color:var(--p1);padding:3px 9px;font-size:11px}
+.btn.full{width:100%}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+/* misc */
+.empty{text-align:center;padding:28px 16px;color:var(--txl);font-size:13px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:9px 22px;border-radius:var(--r);font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;box-shadow:var(--sh)}
+.sep{font-size:11px;color:var(--txl);margin:10px 0 7px;border-bottom:1px solid var(--g1);padding-bottom:4px;font-weight:600}
+.collapse-done{color:var(--txl);cursor:pointer;font-size:11px;font-weight:600;padding:6px 0;text-align:center;border-top:1px solid var(--g1);margin-top:4px}
+.collapse-done:hover{color:var(--tx)}
+@media(max-width:560px){
+  .quad-grid{grid-template-columns:1fr}
+  .prio-row .pbtn{font-size:10px;padding:6px 4px}
+  .dots-row .day-dot{width:24px;height:24px;font-size:9px}
+  .dots-row .today-dot{width:28px;height:28px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div><h1>&#x2705; مهامي</h1><div class="sub">نظام تنظيم يومي — مهام · مشاريع · عادات</div></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn" style="font-size:11px;padding:6px 10px" onclick="exportData()">&#x1F4BE; نسخة</button>
+      <button class="btn" style="font-size:11px;padding:6px 10px" onclick="importData()">&#x1F4C2; استيراد</button>
+      <button class="btn" style="font-size:11px;padding:6px 10px;background:var(--ind);color:#fff;border-color:var(--ind)" onclick="syncToLink()">&#x1F4F1; مزامنة للموبايل</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tb-today"    onclick="showTab('today')">📋 اليوم</button>
+    <button class="tab"        id="tb-tasks"    onclick="showTab('tasks')">🗂️ المهام</button>
+    <button class="tab"        id="tb-projects" onclick="showTab('projects')">🏗️ مشاريع</button>
+    <button class="tab"        id="tb-habits"   onclick="showTab('habits')">🔄 عادات</button>
+  </div>
+  <div id="pane-today"></div>
+  <div id="pane-tasks"    style="display:none"></div>
+  <div id="pane-projects" style="display:none"></div>
+  <div id="pane-habits"   style="display:none"></div>
+</div>
+
+<div class="modal-overlay" id="modal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head"><h3 id="m-title">تعديل</h3><button class="mclose" onclick="closeModal()">&#215;</button></div>
+    <div class="modal-body" id="m-body"></div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal()">إلغاء</button><button class="btn p" onclick="saveModal()">حفظ</button></div>
+  </div>
+</div>
+
+<input type="file" id="imp-file" accept=".json" style="display:none" onchange="handleImport(event)">
+<div class="toast" id="toast"></div>
+<script>
+
+const SK = 'todomaster_v1';
+const DAYS_AR = ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+const CATS = [
+  {id:'design',   label:'🎨 تصميم & بورتفوليو'},
+  {id:'german',   label:'📚 كورس ألماني'},
+  {id:'content',  label:'💼 لينكدإن & محتوى'},
+  {id:'gov',      label:'🏛️ إجراءات حكومية'},
+  {id:'shopping', label:'🛒 مشتريات'},
+  {id:'health',   label:'💪 صحة & رياضة'},
+  {id:'personal', label:'🧠 تطوير شخصي'},
+  {id:'other',    label:'📦 متنوع'},
+];
+
+const PRIOS = [
+  {id:'p1', icon:'🔥', label:'مهم + مستعجل',       short:'مهم+عاجل'},
+  {id:'p2', icon:'📅', label:'مهم + مش مستعجل',    short:'مهم+لاحقاً'},
+  {id:'p3', icon:'⚡', label:'مش مهم + مستعجل',    short:'مش مهم+عاجل'},
+  {id:'p4', icon:'🗃️', label:'مش مهم + مش مستعجل', short:'لاحقاً'},
+];
+
+function defState(){
+  return{
+    tasks:[
+      {id:'t1',title:'متابعة تسجيل الـ Anmeldung',cat:'gov',priority:'p1',status:'active',todayFlag:true,dueDate:'',note:'محتاج جواز + عقد الإيجار',addedDate:todayStr()},
+      {id:'t2',title:'نشر أول مقال في سلسلة UX Masterplan',cat:'content',priority:'p1',status:'active',todayFlag:true,dueDate:'',note:'',addedDate:todayStr()},
+      {id:'t3',title:'فتح حساب بنكي ألماني',cat:'gov',priority:'p2',status:'active',todayFlag:false,dueDate:'',note:'N26 أو Bunq',addedDate:todayStr()},
+      {id:'t4',title:'شراء سماعات للمذاكرة',cat:'shopping',priority:'p4',status:'active',todayFlag:false,dueDate:'',note:'',addedDate:todayStr()},
+    ],
+    projects:[
+      {id:'pr1',title:'ZAMW Case Study — Behance',cat:'design',priority:'p1',status:'active',note:'الملف المحوري في البورتفوليو',
+       phases:[
+         {id:'ph1',title:'تحليل المشكلة والـ Problem Statement',status:'done',note:''},
+         {id:'ph2',title:'User Research & Psychology Principles',status:'done',note:''},
+         {id:'ph3',title:'User Flow + Information Architecture',status:'active',note:'شغال عليه دلوقتي في FigJam'},
+         {id:'ph4',title:'UI Design & Visual Polish',status:'todo',note:''},
+         {id:'ph5',title:'نشر على Behance — يوم ثلاثاء',status:'todo',note:''},
+       ]},
+    ],
+    habits:[
+      {id:'h1',title:'مذاكرة ألماني',cat:'german',frequency:'daily',streak:0,lastDone:'',completions:[]},
+      {id:'h2',title:'نشر على LinkedIn',cat:'content',frequency:'weekly',streak:0,lastDone:'',completions:[]},
+    ],
+  };
+}
+
+let S = (()=>{
+  try{const r=localStorage.getItem(SK);if(r)return{...defState(),...JSON.parse(r)};}catch(e){}
+  return defState();
+})();
+
+// state for quick add
+let qPrio='p1',qCat='other';
+
+function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){toast('⚠️ مساحة ممتلئة');}}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function dateOffset(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];}
+function catLabel(id){return(CATS.find(c=>c.id===id)||{label:id}).label;}
+function prioData(id){return PRIOS.find(p=>p.id===id)||PRIOS[3];}
+function shortDate(ds){if(!ds)return'';const p=ds.split('-');return p[2]+'/'+p[1];}
+let _tT;
+function toast(m,ms=2300){const el=document.getElementById('toast');el.textContent=m;el.style.opacity=1;clearTimeout(_tT);_tT=setTimeout(()=>el.style.opacity=0,ms);}
+
+let curTab='today';
+function showTab(t){
+  curTab=t;
+  ['today','tasks','projects','habits'].forEach(n=>{
+    document.getElementById('pane-'+n).style.display=n===t?'':'none';
+    document.getElementById('tb-'+n).classList.toggle('active',n===t);
+  });
+  render();
+}
+function render(){
+  if(curTab==='today')rToday();
+  else if(curTab==='tasks')rTasks();
+  else if(curTab==='projects')rProjects();
+  else if(curTab==='habits')rHabits();
+}
+
+// ── TODAY ─────────────────────────────────────────────────────
+function rToday(){
+  const el=document.getElementById('pane-today');
+  const today=todayStr();
+  const todayTasks=S.tasks.filter(t=>t.status!=='done'&&(t.todayFlag||(t.dueDate&&t.dueDate<=today)));
+  const doneTasks=S.tasks.filter(t=>t.status==='done'&&(t.todayFlag||(t.doneDate&&t.doneDate===today)));
+  const catOpts=CATS.map(c=>`<option value="${c.id}"${c.id===qCat?' selected':''}>${c.label}</option>`).join('');
+
+  const now=new Date();
+  const dateStr=DAYS_AR[now.getDay()]+' '+now.getDate()+' '+MONTHS_AR[now.getMonth()];
+
+  const taskList=todayTasks.length
+    ?todayTasks.map(t=>taskCard(t,true)).join('')
+    :`<div class="empty">✅ مفيش مهام للنهارده — أضف من الأسفل أو من تاب المهام</div>`;
+
+  const doneSection=doneTasks.length
+    ?`<div class="collapse-done" onclick="toggleDoneSection('today-done')">✅ منجز النهارده (${doneTasks.length})</div>
+       <div id="today-done" style="display:none">${doneTasks.map(t=>taskCard(t,false)).join('')}</div>`:'' ;
+
+  el.innerHTML=`
+    <div class="qadd">
+      <input type="text" id="qa-title" placeholder="+ مهمة جديدة... (اكتب وحدد الأولوية)" onkeydown="if(event.key==='Enter')quickAdd()">
+      <div class="prio-row">
+        ${PRIOS.map(p=>`<button class="pbtn ${p.id}${qPrio===p.id?' sel':''}" onclick="qPrio='${p.id}';render()">${p.icon} ${p.short}</button>`).join('')}
+      </div>
+      <div class="add-row">
+        <select id="qa-cat" onchange="qCat=this.value">${catOpts}</select>
+        <button class="btn p" onclick="quickAdd()" style="white-space:nowrap">+ إضافة</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec">
+        <span>📋 مهام النهارده <span style="font-size:11px;color:var(--txm);font-weight:400;margin-right:4px">${dateStr}</span></span>
+        <span style="font-size:12px;color:var(--txm)">${todayTasks.length} مهمة</span>
+      </div>
+      ${taskList}
+      ${doneSection}
+    </div>`;
+
+  // Focus quick add
+  setTimeout(()=>document.getElementById('qa-title')?.focus(),50);
+}
+
+function quickAdd(){
+  const title=document.getElementById('qa-title')?.value.trim();
+  const cat=document.getElementById('qa-cat')?.value||qCat;
+  if(!title){toast('⚠️ اكتب المهمة أولاً');return;}
+  S.tasks.push({id:uid(),title,cat,priority:qPrio,status:'active',todayFlag:true,dueDate:'',note:'',addedDate:todayStr()});
+  save();
+  document.getElementById('qa-title').value='';
+  document.getElementById('qa-title').focus();
+  toast('✅ تمت الإضافة');
+  render();
+}
+
+function toggleDoneSection(id){
+  const el=document.getElementById(id);
+  if(el)el.style.display=el.style.display==='none'?'':'none';
+}
+
+// ── TASK CARD ──────────────────────────────────────────────────
+function taskCard(t,showToday=false){
+  const p=prioData(t.priority);
+  const isDone=t.status==='done';
+  const dueBadge=t.dueDate?`<span class="bdg" style="background:#FFF0F6;color:#E64980">📅 ${shortDate(t.dueDate)}</span>`:'';
+  const todayBadge=showToday&&t.todayFlag?`<span class="bdg today">اليوم</span>`:'';
+  return`<div class="task-item">
+    <div class="task-cb ${isDone?'done':''}" onclick="toggleTask('${t.id}')"></div>
+    <div class="task-body">
+      <div class="task-title ${isDone?'done':''}">${t.title}</div>
+      <div class="task-meta">
+        <span class="bdg ${t.priority}">${p.icon} ${p.short}</span>
+        <span class="bdg cat">${catLabel(t.cat).split(' ').slice(0,2).join(' ')}</span>
+        ${dueBadge}${todayBadge}
+        ${t.note?`<span style="font-size:11px;color:var(--txl);font-style:italic">${t.note.slice(0,30)}${t.note.length>30?'...':''}</span>`:''}
+      </div>
+    </div>
+    <div class="task-actions">
+      ${!isDone&&!t.todayFlag?`<button class="ibtn" onclick="addToToday('${t.id}')" title="أضف لليوم">📌</button>`:''}
+      <button class="ibtn" onclick="editTask('${t.id}')" title="تعديل">&#9998;</button>
+      <button class="ibtn del" onclick="delTask('${t.id}')" title="حذف">&#215;</button>
+    </div>
+  </div>`;
+}
+
+function toggleTask(id){
+  const t=S.tasks.find(x=>x.id===id);if(!t)return;
+  t.status=t.status==='done'?'active':'done';
+  if(t.status==='done')t.doneDate=todayStr(); else delete t.doneDate;
+  save();render();
+}
+
+function addToToday(id){
+  const t=S.tasks.find(x=>x.id===id);if(!t)return;
+  t.todayFlag=true;save();toast('📌 تمت الإضافة لليوم');render();
+}
+
+function delTask(id){
+  if(!confirm('تحذف المهمة؟'))return;
+  const idx=S.tasks.findIndex(x=>x.id===id);
+  if(idx!==-1){S.tasks.splice(idx,1);save();render();toast('✅ تم الحذف');}
+}
+
+// ── ALL TASKS ────────────────────────────────────────────────
+function rTasks(){
+  const el=document.getElementById('pane-tasks');
+  const active=S.tasks.filter(t=>t.status!=='done');
+  const done=S.tasks.filter(t=>t.status==='done');
+  const catOpts=CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  const catOptsAll=`<option value="">كل الفئات</option>`+catOpts;
+
+  const filterCat=window._taskFilter||'';
+  const filtered=filterCat?active.filter(t=>t.cat===filterCat):active;
+
+  const quad=pid=>filtered.filter(t=>t.priority===pid);
+  const p=PRIOS;
+
+  const quadHTML=pid=>{
+    const items=quad(pid);
+    const pd=prioData(pid);
+    const colors={'p1':'var(--p1)','p2':'var(--p2)','p3':'var(--p3)','p4':'var(--p4)'};
+    const bgs={'p1':'var(--p1bg)','p2':'var(--p2bg)','p3':'var(--p3bg)','p4':'var(--p4bg)'};
+    return`<div class="quad" style="background:${bgs[pid]}">
+      <div class="quad-title" style="color:${colors[pid]}">${pd.icon} ${pd.label} <span style="font-weight:400;font-size:11px">(${items.length})</span></div>
+      ${items.length?items.map(t=>taskCard(t)).join(''):`<div style="font-size:12px;color:var(--txl);text-align:center;padding:12px 0">فاضي ✨</div>`}
+    </div>`;
+  };
+
+  el.innerHTML=`
+    <div class="card">
+      <div class="sec">
+        <span>🗂️ كل المهام (${active.length})</span>
+        <select onchange="window._taskFilter=this.value;render()" style="width:auto;margin:0;font-size:11px;padding:4px 8px">${catOptsAll}</select>
+      </div>
+      <div class="quad-grid">
+        ${quadHTML('p1')}${quadHTML('p2')}
+        ${quadHTML('p3')}${quadHTML('p4')}
+      </div>
+    </div>
+    ${done.length?`<div class="card"><div class="collapse-done" onclick="toggleDoneSection('all-done')">✅ المنجزة (${done.length})</div>
+      <div id="all-done" style="display:none">${done.map(t=>taskCard(t)).join('')}</div></div>`:''}
+    <div class="card"><div class="sec">+ مهمة جديدة</div>
+      <input type="text" id="nt-title" placeholder="عنوان المهمة">
+      <div class="row2">
+        <div><label>الأولوية</label>
+          <select id="nt-prio">${PRIOS.map(p=>`<option value="${p.id}">${p.icon} ${p.label}</option>`).join('')}</select></div>
+        <div><label>الفئة</label><select id="nt-cat">${catOpts}</select></div>
+      </div>
+      <div class="row2">
+        <div><label>الموعد (اختياري)</label><input type="date" id="nt-due"></div>
+        <div style="padding-top:20px">
+          <label><input type="checkbox" id="nt-today" style="width:auto;margin:0 4px 0 0"> أضف لليوم</label>
+        </div>
+      </div>
+      <label>ملاحظة</label>
+      <textarea id="nt-note" rows="2" placeholder="اختياري..."></textarea>
+      <button class="btn p full" onclick="addFullTask()">+ إضافة</button>
+    </div>`;
+}
+
+function addFullTask(){
+  const title=document.getElementById('nt-title')?.value.trim();
+  if(!title){toast('⚠️ اكتب عنوان المهمة');return;}
+  S.tasks.push({id:uid(),title,
+    cat:document.getElementById('nt-cat')?.value||'other',
+    priority:document.getElementById('nt-prio')?.value||'p2',
+    status:'active',
+    todayFlag:document.getElementById('nt-today')?.checked||false,
+    dueDate:document.getElementById('nt-due')?.value||'',
+    note:document.getElementById('nt-note')?.value.trim()||'',
+    addedDate:todayStr()
+  });
+  save();toast('✅ تمت الإضافة');render();
+}
+
+// ── PROJECTS ──────────────────────────────────────────────────
+function rProjects(){
+  const el=document.getElementById('pane-projects');
+  const active=S.projects.filter(p=>p.status!=='done');
+  const done=S.projects.filter(p=>p.status==='done');
+
+  function projHTML(proj){
+    const phases=proj.phases||[];
+    const doneCt=phases.filter(ph=>ph.status==='done').length;
+    const pct=phases.length?Math.round(doneCt/phases.length*100):0;
+    const curPhase=phases.find(ph=>ph.status==='active')||phases.find(ph=>ph.status==='todo');
+    const p=prioData(proj.priority);
+    return`<div class="proj-card">
+      <div class="proj-header" onclick="toggleProj('${proj.id}')">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+            <strong style="font-size:14px">${proj.title}</strong>
+            <span class="bdg ${proj.priority}">${p.icon}</span>
+            <span class="bdg cat">${catLabel(proj.cat).split(' ').slice(0,2).join(' ')}</span>
+          </div>
+          ${curPhase?`<div style="font-size:12px;color:var(--purple)">▶ المرحلة الحالية: ${curPhase.title}</div>`:''}
+          <div class="proj-progress"><div class="proj-progress-bar" style="width:${pct}%"></div></div>
+          <div style="font-size:11px;color:var(--txm);margin-top:3px">${doneCt}/${phases.length} مراحل (${pct}%)</div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <button class="ibtn" onclick="event.stopPropagation();editProject('${proj.id}')" title="تعديل">&#9998;</button>
+          <button class="ibtn del" onclick="event.stopPropagation();delProject('${proj.id}')" title="حذف">&#215;</button>
+        </div>
+      </div>
+      <div id="proj-${proj.id}" style="display:none">
+        ${phases.map(ph=>`<div class="phase-item">
+          <div class="phase-dot ${ph.status}" onclick="togglePhase('${proj.id}','${ph.id}')"></div>
+          <span class="phase-label ${ph.status}" style="flex:1">${ph.title}</span>
+          ${ph.note?`<span style="font-size:11px;color:var(--txl)">${ph.note}</span>`:''}
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML=`
+    ${active.length?active.map(projHTML).join(''):`<div class="card"><div class="empty">مفيش مشاريع نشطة — أضف مشروع</div></div>`}
+    ${done.length?`<div class="collapse-done card" onclick="toggleDoneSection('done-projs')">✅ مشاريع منجزة (${done.length})</div><div id="done-projs" style="display:none">${done.map(projHTML).join('')}</div>`:''}
+    <div class="card"><div class="sec">+ مشروع جديد</div>
+      <input type="text" id="np-title" placeholder="اسم المشروع">
+      <div class="row2">
+        <div><label>الأولوية</label><select id="np-prio">${PRIOS.map(p=>`<option value="${p.id}">${p.icon} ${p.label}</option>`).join('')}</select></div>
+        <div><label>الفئة</label><select id="np-cat">${CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')}</select></div>
+      </div>
+      <label>ملاحظة</label><textarea id="np-note" rows="2" placeholder="اختياري..."></textarea>
+      <div class="sep">المراحل (سطر واحد = مرحلة)</div>
+      <textarea id="np-phases" rows="4" placeholder="مرحلة 1&#10;مرحلة 2&#10;مرحلة 3"></textarea>
+      <button class="btn p full" onclick="addProject()">+ إضافة المشروع</button>
+    </div>`;
+}
+
+function toggleProj(id){
+  const el=document.getElementById('proj-'+id);
+  if(el)el.style.display=el.style.display==='none'?'':'none';
+}
+
+function togglePhase(projId,phId){
+  const proj=S.projects.find(p=>p.id===projId);if(!proj)return;
+  const ph=proj.phases.find(p=>p.id===phId);if(!ph)return;
+  if(ph.status==='done'){ph.status='active';}
+  else{
+    ph.status='done';
+    // Activate next todo phase
+    const next=proj.phases.find(p=>p.status==='todo');
+    if(next)next.status='active';
+    // If all done, mark project done
+    if(proj.phases.every(p=>p.status==='done'))proj.status='done';
+  }
+  save();render();toast(ph.status==='done'?'✅ مرحلة اكتملت':'↩️ رجعت للنشط');
+}
+
+function addProject(){
+  const title=document.getElementById('np-title')?.value.trim();
+  if(!title){toast('⚠️ اكتب اسم المشروع');return;}
+  const phasesText=document.getElementById('np-phases')?.value||'';
+  const phases=phasesText.split('\n').map(s=>s.trim()).filter(Boolean).map((t,i)=>({id:uid(),title:t,status:i===0?'active':'todo',note:''}));
+  if(!phases.length)phases.push({id:uid(),title:'المرحلة الأولى',status:'active',note:''});
+  S.projects.push({id:uid(),title,
+    cat:document.getElementById('np-cat')?.value||'other',
+    priority:document.getElementById('np-prio')?.value||'p2',
+    status:'active',note:document.getElementById('np-note')?.value.trim()||'',phases});
+  save();toast('✅ تم إضافة المشروع');render();
+}
+
+function delProject(id){
+  if(!confirm('تحذف المشروع وكل مراحله؟'))return;
+  const idx=S.projects.findIndex(p=>p.id===id);
+  if(idx!==-1){S.projects.splice(idx,1);save();render();toast('✅ تم الحذف');}
+}
+
+// ── HABITS ────────────────────────────────────────────────────
+function calcStreak(h){
+  const comps=h.completions||[];
+  if(!comps.length)return 0;
+  const sorted=[...new Set(comps)].sort().reverse();
+  const today=todayStr(),yesterday=dateOffset(-1);
+  if(sorted[0]!==today&&sorted[0]!==yesterday)return 0;
+  let streak=0,check=sorted[0];
+  for(const c of sorted){
+    if(c===check){streak++;const d=new Date(check);d.setDate(d.getDate()-1);check=d.toISOString().split('T')[0];}
+    else if(c<check)break;
+  }
+  return streak;
+}
+
+function rHabits(){
+  const el=document.getElementById('pane-habits');
+  const today=todayStr();
+
+  function habitHTML(h){
+    const streak=calcStreak(h);
+    const doneTodayRaw=h.completions||[];
+    const doneToday=doneTodayRaw.includes(today);
+    // Last 7 days
+    const last7=Array.from({length:7},(_,i)=>{
+      const d=dateOffset(i-6);
+      const hit=(h.completions||[]).includes(d);
+      const isToday=d===today;
+      return{d,hit,isToday};
+    });
+    const dotHTML=last7.map(x=>{
+      const day=x.d.split('-')[2];
+      if(x.isToday)return`<div class="day-dot today-dot">${day}</div>`;
+      return`<div class="day-dot ${x.hit?'hit':'miss'}">${day}</div>`;
+    }).join('');
+    const freqLabel=h.frequency==='daily'?'يومي':h.frequency==='weekly'?'أسبوعي':'متكرر';
+    return`<div class="habit-card">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="habit-check ${doneToday?'done':''}" onclick="markHabit('${h.id}')" title="${doneToday?'تم اليوم — اضغط للتراجع':'سجّل اليوم'}">
+          ${doneToday?'✓':''}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+            <strong style="font-size:14px">${h.title}</strong>
+            <span class="bdg cat">${catLabel(h.cat).split(' ').slice(0,2).join(' ')}</span>
+            <span class="bdg cat">${freqLabel}</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:4px">
+            <div class="habit-streak">${streak}</div>
+            <div style="font-size:11px;color:var(--txm)">${streak===1?'يوم متتالي':'يوم متتالي'} ${streak>=7?'🔥':streak>=3?'💪':''}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="ibtn" onclick="editHabit('${h.id}')" title="تعديل">&#9998;</button>
+          <button class="ibtn del" onclick="delHabit('${h.id}')" title="حذف">&#215;</button>
+        </div>
+      </div>
+      <div class="dots-row" style="margin-top:10px">${dotHTML}</div>
+    </div>`;
+  }
+
+  el.innerHTML=`
+    ${S.habits.length?S.habits.map(habitHTML).join(''):`<div class="card"><div class="empty">مفيش عادات بعد — أضف عادة</div></div>`}
+    <div class="card"><div class="sec">+ عادة جديدة</div>
+      <input type="text" id="nh-title" placeholder="اسم العادة">
+      <div class="row2">
+        <div><label>التكرار</label>
+          <select id="nh-freq"><option value="daily">يومي</option><option value="weekly">أسبوعي</option></select></div>
+        <div><label>الفئة</label>
+          <select id="nh-cat">${CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')}</select></div>
+      </div>
+      <button class="btn p full" onclick="addHabit()">+ إضافة</button>
+    </div>`;
+}
+
+function markHabit(id){
+  const h=S.habits.find(x=>x.id===id);if(!h)return;
+  const today=todayStr();
+  if(!h.completions)h.completions=[];
+  if(h.completions.includes(today)){
+    h.completions=h.completions.filter(d=>d!==today);
+    toast('↩️ تم التراجع');
+  }else{
+    h.completions.push(today);
+    const s=calcStreak(h);
+    toast(s>=7?'🔥 أسبوع كامل! ممتاز':s>=3?`💪 ${s} أيام متتالية!`:'✅ تم التسجيل');
+  }
+  h.lastDone=today;save();render();
+}
+
+function addHabit(){
+  const title=document.getElementById('nh-title')?.value.trim();
+  if(!title){toast('⚠️ اكتب اسم العادة');return;}
+  S.habits.push({id:uid(),title,
+    cat:document.getElementById('nh-cat')?.value||'other',
+    frequency:document.getElementById('nh-freq')?.value||'daily',
+    streak:0,lastDone:'',completions:[]});
+  save();toast('✅ تمت الإضافة');render();
+}
+
+function delHabit(id){
+  if(!confirm('تحذف العادة وكل سجلها؟'))return;
+  const idx=S.habits.findIndex(x=>x.id===id);
+  if(idx!==-1){S.habits.splice(idx,1);save();render();}
+}
+
+// ── MODAL EDITS ───────────────────────────────────────────────
+let mCtx=null;
+function openModal(title,body,ctx){
+  mCtx=ctx;
+  document.getElementById('m-title').textContent=title;
+  document.getElementById('m-body').innerHTML=body;
+  document.getElementById('modal').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeModal(){document.getElementById('modal').style.display='none';document.body.style.overflow='';mCtx=null;}
+function gv(id){return document.getElementById(id)?.value||'';}
+
+function editTask(id){
+  const t=S.tasks.find(x=>x.id===id);if(!t)return;
+  const pOpts=PRIOS.map(p=>`<option value="${p.id}"${p.id===t.priority?' selected':''}>${p.icon} ${p.label}</option>`).join('');
+  const cOpts=CATS.map(c=>`<option value="${c.id}"${c.id===t.cat?' selected':''}>${c.label}</option>`).join('');
+  openModal('✏️ تعديل المهمة',`
+    <label>العنوان</label><input type="text" id="et-title" value="${t.title.replace(/"/g,'&quot;')}">
+    <div class="row2">
+      <div><label>الأولوية</label><select id="et-prio">${pOpts}</select></div>
+      <div><label>الفئة</label><select id="et-cat">${cOpts}</select></div>
+    </div>
+    <div class="row2">
+      <div><label>الموعد</label><input type="date" id="et-due" value="${t.dueDate||''}"></div>
+      <div style="padding-top:20px"><label><input type="checkbox" id="et-today" style="width:auto;margin:0 4px 0 0"${t.todayFlag?' checked':''}> أضف لليوم</label></div>
+    </div>
+    <label>ملاحظة</label><textarea id="et-note" rows="2">${t.note||''}</textarea>
+  `,{type:'task',id});
+}
+
+function editProject(id){
+  const proj=S.projects.find(x=>x.id===id);if(!proj)return;
+  const pOpts=PRIOS.map(p=>`<option value="${p.id}"${p.id===proj.priority?' selected':''}>${p.icon} ${p.label}</option>`).join('');
+  const cOpts=CATS.map(c=>`<option value="${c.id}"${c.id===proj.cat?' selected':''}>${c.label}</option>`).join('');
+  const phasesStr=(proj.phases||[]).map(ph=>ph.title).join('\n');
+  openModal('✏️ تعديل المشروع',`
+    <label>الاسم</label><input type="text" id="ep-title" value="${proj.title.replace(/"/g,'&quot;')}">
+    <div class="row2">
+      <div><label>الأولوية</label><select id="ep-prio">${pOpts}</select></div>
+      <div><label>الفئة</label><select id="ep-cat">${cOpts}</select></div>
+    </div>
+    <label>ملاحظة</label><textarea id="ep-note" rows="2">${proj.note||''}</textarea>
+    <label>المراحل (سطر = مرحلة — التعديل بيحتفظ بحالة المراحل الموجودة)</label>
+    <textarea id="ep-phases" rows="5">${phasesStr}</textarea>
+  `,{type:'project',id});
+}
+
+function editHabit(id){
+  const h=S.habits.find(x=>x.id===id);if(!h)return;
+  const fOpts=`<option value="daily"${h.frequency==='daily'?' selected':''}>يومي</option><option value="weekly"${h.frequency==='weekly'?' selected':''}>أسبوعي</option>`;
+  const cOpts=CATS.map(c=>`<option value="${c.id}"${c.id===h.cat?' selected':''}>${c.label}</option>`).join('');
+  openModal('✏️ تعديل العادة',`
+    <label>الاسم</label><input type="text" id="eh-title" value="${h.title.replace(/"/g,'&quot;')}">
+    <div class="row2">
+      <div><label>التكرار</label><select id="eh-freq">${fOpts}</select></div>
+      <div><label>الفئة</label><select id="eh-cat">${cOpts}</select></div>
+    </div>
+  `,{type:'habit',id});
+}
+
+function saveModal(){
+  if(!mCtx)return;
+  const{type,id}=mCtx;
+  if(type==='task'){
+    const t=S.tasks.find(x=>x.id===id);if(!t)return;
+    const title=gv('et-title').trim();
+    if(!title){toast('⚠️ اكتب العنوان');return;}
+    t.title=title;t.priority=gv('et-prio');t.cat=gv('et-cat');
+    t.dueDate=gv('et-due');t.note=gv('et-note');
+    t.todayFlag=document.getElementById('et-today')?.checked||false;
+  }else if(type==='project'){
+    const proj=S.projects.find(x=>x.id===id);if(!proj)return;
+    const title=gv('ep-title').trim();if(!title){toast('⚠️ اكتب الاسم');return;}
+    proj.title=title;proj.priority=gv('ep-prio');proj.cat=gv('ep-cat');proj.note=gv('ep-note');
+    // Merge phases - keep existing status, add new ones
+    const newTitles=gv('ep-phases').split('\n').map(s=>s.trim()).filter(Boolean);
+    proj.phases=newTitles.map(t=>{
+      const ex=proj.phases.find(p=>p.title===t);
+      return ex||{id:uid(),title:t,status:'todo',note:''};
+    });
+  }else if(type==='habit'){
+    const h=S.habits.find(x=>x.id===id);if(!h)return;
+    const title=gv('eh-title').trim();if(!title){toast('⚠️ اكتب الاسم');return;}
+    h.title=title;h.frequency=gv('eh-freq');h.cat=gv('eh-cat');
+  }
+  save();closeModal();toast('✅ تم التعديل');render();
+}
+
+// ── EXPORT / IMPORT ───────────────────────────────────────────
+function exportData(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}));
+  a.download='مهامي_backup_'+todayStr()+'.json';a.click();toast('✅ تم تنزيل النسخة');
+}
+function importData(){document.getElementById('imp-file').click();}
+function handleImport(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(!confirm('هيحل محل البيانات الحالية؟'))return;
+      S={...defState(),...d};save();toast('✅ تم الاستيراد');render();
+    }catch{toast('⚠️ ملف غير صالح');}
+  };
+  r.readAsText(f);e.target.value='';
+}
+
+// ── SYNC VIA LINK ─────────────────────────────────────────────
+function syncToLink(){
+  try{
+    const json=JSON.stringify(S);
+    const b64=btoa(unescape(encodeURIComponent(json)));
+    const kb=Math.round(b64.length/1024);
+    if(b64.length>200000){toast('⚠️ البيانات كبيرة جداً — استخدم نسخة JSON');return;}
+    const link=location.href.split('#')[0]+'#sync='+b64;
+    // Copy to clipboard
+    navigator.clipboard.writeText(link).then(()=>{
+      toast('✅ اللينك اتنسخ — افتحه على الموبايل ('+kb+' KB)');
+    }).catch(()=>{
+      // Fallback: show in prompt
+      prompt('انسخ اللينك ده وافتحه على الموبايل:',link);
+    });
+  }catch(e){toast('⚠️ خطأ: '+e.message);}
+}
+
+function checkSyncLink(){
+  const hash=location.hash;
+  if(!hash.startsWith('#sync='))return;
+  try{
+    const b64=hash.slice(6);
+    const json=decodeURIComponent(escape(atob(b64)));
+    const data=JSON.parse(json);
+    // Load silently — don't override if user already has data
+    const existing=localStorage.getItem(SK);
+    if(existing&&JSON.parse(existing).tasks?.length>0){
+      if(!confirm('عندك بيانات موجودة — تحملها من اللينك وتبدّلها؟'))return;
+    }
+    S={...defState(),...data};
+    save();
+    // Clean URL
+    history.replaceState(null,'',location.href.split('#')[0]);
+    toast('✅ تم تحميل البيانات من اللينك');
+    render();
+  }catch(e){
+    history.replaceState(null,'',location.href.split('#')[0]);
+  }
+}
+
+
+checkSyncLink();
+render();
+
+</script>
+</body>
+</html>
