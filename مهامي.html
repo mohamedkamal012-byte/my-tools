@@ -133,6 +133,8 @@ textarea{resize:vertical;min-height:60px}
   .dots-row .today-dot{width:28px;height:28px}
 }
 </style>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
 <div class="app">
@@ -141,7 +143,6 @@ textarea{resize:vertical;min-height:60px}
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button class="btn" style="font-size:11px;padding:6px 10px" onclick="exportData()">&#x1F4BE; نسخة</button>
       <button class="btn" style="font-size:11px;padding:6px 10px" onclick="importData()">&#x1F4C2; استيراد</button>
-      <button class="btn" style="font-size:11px;padding:6px 10px;background:var(--ind);color:#fff;border-color:var(--ind)" onclick="syncToLink()">&#x1F4F1; مزامنة للموبايل</button>
     </div>
   </div>
   <div class="tabs">
@@ -223,7 +224,6 @@ let S = (()=>{
 // state for quick add
 let qPrio='p1',qCat='other';
 
-function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){toast('⚠️ مساحة ممتلئة');}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function todayStr(){return new Date().toISOString().split('T')[0];}
 function dateOffset(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];}
@@ -732,50 +732,49 @@ function handleImport(e){
   r.readAsText(f);e.target.value='';
 }
 
-// ── SYNC VIA LINK ─────────────────────────────────────────────
-function syncToLink(){
-  try{
-    const json=JSON.stringify(S);
-    const b64=btoa(unescape(encodeURIComponent(json)));
-    const kb=Math.round(b64.length/1024);
-    if(b64.length>200000){toast('⚠️ البيانات كبيرة جداً — استخدم نسخة JSON');return;}
-    const link=location.href.split('#')[0]+'#sync='+b64;
-    // Copy to clipboard
-    navigator.clipboard.writeText(link).then(()=>{
-      toast('✅ اللينك اتنسخ — افتحه على الموبايل ('+kb+' KB)');
-    }).catch(()=>{
-      // Fallback: show in prompt
-      prompt('انسخ اللينك ده وافتحه على الموبايل:',link);
-    });
-  }catch(e){toast('⚠️ خطأ: '+e.message);}
+
+// ── FIREBASE SYNC ─────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyA9S5V9sWaA_CG6iuNivNMMBmx28MM06lo",
+  authDomain: "my-tools-365ad.firebaseapp.com",
+  databaseURL: "https://my-tools-365ad-default-rtdb.firebaseio.com",
+  projectId: "my-tools-365ad",
+  storageBucket: "my-tools-365ad.firebasestorage.app",
+  messagingSenderId: "628152474457",
+  appId: "1:628152474457:web:2a387d265f18eb18b34a48"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const FB_PATH = '/todo_data';
+let _lastSave = 0;
+
+function save() {
+  _lastSave = Date.now();
+  try { localStorage.setItem(SK, JSON.stringify(S)); } catch(e) {}
+  db.ref(FB_PATH).set(S).catch(function(e) { console.warn('Firebase save error:', e); });
 }
 
-function checkSyncLink(){
-  const hash=location.hash;
-  if(!hash.startsWith('#sync='))return;
-  try{
-    const b64=hash.slice(6);
-    const json=decodeURIComponent(escape(atob(b64)));
-    const data=JSON.parse(json);
-    // Load silently — don't override if user already has data
-    const existing=localStorage.getItem(SK);
-    if(existing&&JSON.parse(existing).tasks?.length>0){
-      if(!confirm('عندك بيانات موجودة — تحملها من اللينك وتبدّلها؟'))return;
+function loadFromFirebase() {
+  db.ref(FB_PATH).once('value').then(function(snap) {
+    var data = snap.val();
+    if (data) {
+      S = Object.assign(defState(), data);
+      try { localStorage.setItem(SK, JSON.stringify(S)); } catch(e) {}
     }
-    S={...defState(),...data};
-    save();
-    // Clean URL
-    history.replaceState(null,'',location.href.split('#')[0]);
-    toast('✅ تم تحميل البيانات من اللينك');
     render();
-  }catch(e){
-    history.replaceState(null,'',location.href.split('#')[0]);
-  }
+    db.ref(FB_PATH).on('value', function(snap2) {
+      if (Date.now() - _lastSave < 3000) return;
+      var newData = snap2.val();
+      if (newData && JSON.stringify(newData) !== JSON.stringify(S)) {
+        S = Object.assign(defState(), newData);
+        render();
+        toast('🔄 تم التحديث من جهاز آخر');
+      }
+    });
+  }).catch(function() { render(); });
 }
 
-
-checkSyncLink();
-render();
+loadFromFirebase();
 
 </script>
 </body>
