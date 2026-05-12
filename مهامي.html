@@ -181,6 +181,7 @@ const CATS = [
   {id:'shopping', label:'🛒 مشتريات'},
   {id:'health',   label:'💪 صحة & رياضة'},
   {id:'personal', label:'🧠 تطوير شخصي'},
+  {id:'dini',     label:'🕌 ديني'},
   {id:'other',    label:'📦 متنوع'},
 ];
 
@@ -210,15 +211,16 @@ function defState(){
        ]},
     ],
     habits:[
-      {id:'h1',title:'مذاكرة ألماني',cat:'german',frequency:'daily',streak:0,lastDone:'',completions:[]},
-      {id:'h2',title:'نشر على LinkedIn',cat:'content',frequency:'weekly',streak:0,lastDone:'',completions:[]},
+      {id:'h1',title:'مذاكرة ألماني',cat:'german',frequency:'daily',type:'regular',content:'',streak:0,lastDone:'',completions:[]},
+      {id:'h2',title:'نشر على LinkedIn',cat:'content',frequency:'weekly',type:'regular',content:'',streak:0,lastDone:'',completions:[]},
     ],
   };
 }
 
+const INIT_DATA={"tasks": [{"addedDate": "2026-05-11", "cat": "gov", "dueDate": "", "id": "t3", "note": "N26 + حساب كمان واحد ينزل فيه الفلوس و احد اسحب منه ", "priority": "p2", "status": "active", "title": "فتح حساب بنكي ألماني", "todayFlag": false}, {"addedDate": "2026-05-11", "cat": "other", "dueDate": "2026-05-12", "id": "mp1cbswesfzd", "note": "طباعة جميع المستندات الخاصة بيا في المانيا", "priority": "p2", "status": "active", "title": "طبعة نسخة ورقية", "todayFlag": false}, {"addedDate": "2026-05-11", "cat": "other", "dueDate": "2026-05-12", "id": "mp1cdf7ey5d3", "note": "", "priority": "p1", "status": "active", "title": "مشوار المحكمة (قضية نفقة كيان )", "todayFlag": false}, {"addedDate": "2026-05-11", "cat": "other", "dueDate": "", "id": "mp1cenjh6xbs", "note": "اشوف عندي كام بكسر و فنله", "priority": "p1", "status": "active", "title": "الملابس الداخلية", "todayFlag": true}, {"addedDate": "2026-05-11", "cat": "gov", "dueDate": "", "id": "mp1comsun0x9", "note": "هتابع الفلوس في الموقع https://campus.uni-due.de/cm/pages/cs/sys/portal/hisinoneStartPage.faces", "priority": "p2", "status": "active", "title": "تسميع الفلوس و كارت المواصلات", "todayFlag": false}, {"addedDate": "2026-05-11", "cat": "gov", "dueDate": "", "id": "mp1cqx0b4w4l", "note": "صورة عادية", "priority": "p1", "status": "active", "title": "اصور ال visa لي فنتيبا بالموبيل", "todayFlag": true}, {"addedDate": "2026-05-11", "cat": "gov", "dueDate": "2026-05-17", "id": "mp1csjyn3c47", "note": "رقم التليفون هستخدمه في تفعيل فنتيبا", "priority": "p2", "status": "active", "title": "خط تليفون اول ما اوصل المانيا", "todayFlag": false}, {"addedDate": "2026-05-11", "cat": "other", "dueDate": "", "id": "mp1cuzf5q67o", "note": "", "priority": "p1", "status": "active", "title": "غطاء لي العربية", "todayFlag": true}, {"addedDate": "2026-05-11", "cat": "other", "dueDate": "2026-05-13", "id": "mp1cylgf549u", "note": "+ كويس", "priority": "p2", "status": "active", "title": "غسل الملابس اللي هاخدها", "todayFlag": false}, {"addedDate": "2026-05-11", "cat": "design", "dueDate": "2026-05-15", "id": "mp1czox83g7c", "note": "الوزن عند مصطفي رمضان", "priority": "p2", "status": "active", "title": "ترتيب الشنطة السفر", "todayFlag": false}, {"addedDate": "2026-05-11", "cat": "design", "dueDate": "2026-05-13", "id": "mp1d1326mn8k", "note": "اسحب فلوس عبدالله من البنك + اشوف موضوع القفل دا + السوال هل الكارت يسحب عادي في اي وقت عشان لو كدا بابا يسحب الفلوس منها", "priority": "p1", "status": "active", "title": "CIB BANK", "todayFlag": false}, {"addedDate": "2026-05-11", "cat": "gov", "dueDate": "2026-05-13", "id": "mp1d2z79wjai", "note": "الغاق جميع الحسابات البنكية معادا CIB", "priority": "p1", "status": "active", "title": "قفل حساب بنك الاهلي + بنك القاهرة", "todayFlag": false}, {"addedDate": "2026-05-11", "cat": "shopping", "dueDate": "2026-05-13", "id": "mp1d4aqpe3wf", "note": "", "priority": "p3", "status": "active", "title": "اشتري برفيوم ليا ولي ابراهيم", "todayFlag": false}, {"addedDate": "2026-05-11", "cat": "other", "dueDate": "", "id": "mp1d5kgxje4o", "note": "هكلمة و اظبط معه", "priority": "p1", "status": "active", "title": "احلق عند عفروتوا", "todayFlag": true}, {"id": "mp1da29u8hbh", "title": "مشوار المطار ( عربية", "cat": "other", "priority": "p1", "status": "active", "todayFlag": false, "dueDate": "2026-05-12", "note": "اكلم الراجل اللي هيجي معايا المطار الطيارة هتوصل 5.30 او 6 كدا", "addedDate": "2026-05-11"}], "projects": [{"cat": "design", "id": "pr1", "note": "الملف المحوري في البورتفوليو", "phases": [{"id": "ph1", "note": "", "status": "done", "title": "تحليل المشكلة والـ Problem Statement"}, {"id": "ph2", "note": "", "status": "done", "title": "User Research & Psychology Principles"}, {"id": "ph3", "note": "شغال عليه دلوقتي في FigJam", "status": "done", "title": "User Flow + Information Architecture"}, {"id": "ph4", "note": "", "status": "done", "title": "UI Design & Visual Polish"}, {"id": "ph5", "note": "", "status": "done", "title": "نشر على Behance — يوم ثلاثاء"}], "priority": "p1", "status": "done", "title": "ZAMW Case Study — Behance"}], "habits": [{"cat": "german", "frequency": "daily", "id": "mp1cw5dlypnf", "lastDone": "", "streak": 0, "title": "Deutsch lernen", "type": "regular", "content": "", "completions": []}]};
 let S = (()=>{
   try{const r=localStorage.getItem(SK);if(r)return{...defState(),...JSON.parse(r)};}catch(e){}
-  return defState();
+  return{...defState(),...INIT_DATA};
 })();
 
 // state for quick add
@@ -363,7 +365,14 @@ function rTasks(){
   const filterCat=window._taskFilter||'';
   const filtered=filterCat?active.filter(t=>t.cat===filterCat):active;
 
-  const quad=pid=>filtered.filter(t=>t.priority===pid);
+  // Date filter
+  const dateF=window._dateFilter||'all';
+  const todayS=todayStr(),tomorrowS=dateOffset(1);
+  const dateFiltered=dateF==='all'?filtered
+    :dateF==='today'?filtered.filter(t=>t.dueDate===todayS||t.todayFlag)
+    :dateF==='tomorrow'?filtered.filter(t=>t.dueDate===tomorrowS)
+    :filtered.filter(t=>t.dueDate&&t.dueDate>tomorrowS);
+  const quad=pid=>dateFiltered.filter(t=>t.priority===pid);
   const p=PRIOS;
 
   const quadHTML=pid=>{
@@ -382,6 +391,13 @@ function rTasks(){
       <div class="sec">
         <span>🗂️ كل المهام (${active.length})</span>
         <select onchange="window._taskFilter=this.value;render()" style="width:auto;margin:0;font-size:11px;padding:4px 8px">${catOptsAll}</select>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        ${['all','today','tomorrow','later'].map((f,i)=>{
+          const labels=['الكل','اليوم','بكرا','لاحقاً'];
+          const active2=(window._dateFilter||'all')===f;
+          return`<button class="btn${active2?' p':''}" style="padding:5px 12px;font-size:11px" onclick="window._dateFilter='${f}';render()">${labels[i]}</button>`;
+        }).join('')}
       </div>
       <div class="quad-grid">
         ${quadHTML('p1')}${quadHTML('p2')}
@@ -536,62 +552,131 @@ function calcStreak(h){
 function rHabits(){
   const el=document.getElementById('pane-habits');
   const today=todayStr();
+  const PRAYERS=['فجر','ظهر','عصر','مغرب','عشاء'];
 
   function habitHTML(h){
     const streak=calcStreak(h);
-    const doneTodayRaw=h.completions||[];
-    const doneToday=doneTodayRaw.includes(today);
-    // Last 7 days
+    const comps=h.completions||[];
+    const isPrayer=h.type==='prayer';
+
+    if(isPrayer){
+      const todayPrayers=PRAYERS.filter(p=>comps.includes(today+'_'+p));
+      const doneCt=todayPrayers.length;
+      const prayerDots=PRAYERS.map(p=>{
+        const done=comps.includes(today+'_'+p);
+        return`<div onclick="togglePrayer('${h.id}','${p}')"
+          style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer">
+          <div style="width:32px;height:32px;border-radius:50%;background:${done?'var(--ind)':'var(--g1)'};
+            border:2px solid ${done?'var(--ind)':'var(--bd)'};display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s">${done?'✓':''}</div><span style="font-size:10px;color:${done?'var(--ind)':'var(--txm)'};font-weight:${done?'700':'400'}">${p}</span>
+        </div>`;
+      }).join('');
+      return`<div class="habit-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:22px">🕌</span>
+            <div>
+              <div style="font-size:14px;font-weight:700;cursor:pointer" onclick="openHabitNotes('${h.id}')">${h.title}</div>
+              <div style="font-size:12px;color:var(--txm)">${doneCt}/5 صلوات اليوم</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <button class="ibtn" onclick="editHabit('${h.id}')">&#9998;</button>
+            <button class="ibtn del" onclick="delHabit('${h.id}')">&#215;</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:space-around">${prayerDots}</div>
+      </div>`;
+    }
+
+    // Regular habit
+    const doneToday=comps.includes(today);
     const last7=Array.from({length:7},(_,i)=>{
       const d=dateOffset(i-6);
-      const hit=(h.completions||[]).includes(d);
+      const hit=comps.includes(d);
       const isToday=d===today;
-      return{d,hit,isToday};
-    });
-    const dotHTML=last7.map(x=>{
-      const day=x.d.split('-')[2];
-      if(x.isToday)return`<div class="day-dot today-dot">${day}</div>`;
-      return`<div class="day-dot ${x.hit?'hit':'miss'}">${day}</div>`;
+      const day=d.split('-')[2];
+      if(isToday)return`<div class="day-dot today-dot">${day}</div>`;
+      return`<div class="day-dot ${hit?'hit':'miss'}">${day}</div>`;
     }).join('');
-    const freqLabel=h.frequency==='daily'?'يومي':h.frequency==='weekly'?'أسبوعي':'متكرر';
+    const freqLabel=h.frequency==='daily'?'يومي':'أسبوعي';
     return`<div class="habit-card">
       <div style="display:flex;align-items:center;gap:12px">
-        <div class="habit-check ${doneToday?'done':''}" onclick="markHabit('${h.id}')" title="${doneToday?'تم اليوم — اضغط للتراجع':'سجّل اليوم'}">
-          ${doneToday?'✓':''}
-        </div>
+        <div class="habit-check ${doneToday?'done':''}" onclick="markHabit('${h.id}')">${doneToday?'✓':''}</div>
         <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-            <strong style="font-size:14px">${h.title}</strong>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;flex-wrap:wrap">
+            <strong style="font-size:14px;cursor:pointer;text-decoration:underline dotted" onclick="openHabitNotes('${h.id}')" title="اضغط لعرض/تعديل المحتوى">${h.title}</strong>
             <span class="bdg cat">${catLabel(h.cat).split(' ').slice(0,2).join(' ')}</span>
             <span class="bdg cat">${freqLabel}</span>
+            ${h.content?`<span style="font-size:11px;color:var(--ind)">📝</span>`:''}
           </div>
           <div style="display:flex;align-items:baseline;gap:4px">
             <div class="habit-streak">${streak}</div>
-            <div style="font-size:11px;color:var(--txm)">${streak===1?'يوم متتالي':'يوم متتالي'} ${streak>=7?'🔥':streak>=3?'💪':''}</div>
+            <div style="font-size:11px;color:var(--txm)">${streak===1?'يوم':'يوم'} متتالي ${streak>=7?'🔥':streak>=3?'💪':''}</div>
           </div>
         </div>
         <div style="display:flex;gap:4px">
-          <button class="ibtn" onclick="editHabit('${h.id}')" title="تعديل">&#9998;</button>
-          <button class="ibtn del" onclick="delHabit('${h.id}')" title="حذف">&#215;</button>
+          <button class="ibtn" onclick="editHabit('${h.id}')">&#9998;</button>
+          <button class="ibtn del" onclick="delHabit('${h.id}')">&#215;</button>
         </div>
       </div>
-      <div class="dots-row" style="margin-top:10px">${dotHTML}</div>
+      <div class="dots-row" style="margin-top:10px">${last7}</div>
     </div>`;
   }
 
   el.innerHTML=`
-    ${S.habits.length?S.habits.map(habitHTML).join(''):`<div class="card"><div class="empty">مفيش عادات بعد — أضف عادة</div></div>`}
+    ${S.habits.length?S.habits.map(habitHTML).join(''):`<div class="card"><div class="empty">مفيش عادات — أضف عادة</div></div>`}
     <div class="card"><div class="sec">+ عادة جديدة</div>
       <input type="text" id="nh-title" placeholder="اسم العادة">
       <div class="row2">
+        <div><label>النوع</label>
+          <select id="nh-type">
+            <option value="regular">عادة عادية</option>
+            <option value="prayer">صلوات (5 في اليوم)</option>
+          </select></div>
         <div><label>التكرار</label>
           <select id="nh-freq"><option value="daily">يومي</option><option value="weekly">أسبوعي</option></select></div>
-        <div><label>الفئة</label>
-          <select id="nh-cat">${CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')}</select></div>
       </div>
+      <div><label>الفئة</label>
+        <select id="nh-cat">${CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')}</select></div>
+      <label>محتوى / ملاحظات (اختياري)</label>
+      <textarea id="nh-content" rows="3" placeholder="مثلاً: أذكار الصباح، نص تحفيزي، قائمة الأذكار..."></textarea>
       <button class="btn p full" onclick="addHabit()">+ إضافة</button>
     </div>`;
 }
+
+function togglePrayer(id, prayer){
+  const h=S.habits.find(x=>x.id===id);if(!h)return;
+  const today=todayStr();
+  const key=today+'_'+prayer;
+  if(!h.completions)h.completions=[];
+  if(h.completions.includes(key)){
+    h.completions=h.completions.filter(c=>c!==key);
+  }else{
+    h.completions.push(key);
+    const ct=(['فجر','ظهر','عصر','مغرب','عشاء']).filter(p=>h.completions.includes(today+'_'+p)).length;
+    if(ct===5)toast('🕌 ما شاء الله — أكملت الصلوات الخمس 🌟');
+    else toast(`✅ ${prayer} ✓`);
+  }
+  save();render();
+}
+
+function openHabitNotes(id){
+  const h=S.habits.find(x=>x.id===id);if(!h)return;
+  openModal('📝 '+h.title,`
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;color:var(--txm);margin-bottom:6px">المحتوى / الملاحظات</div>
+      <textarea id="hn-content" rows="8" style="direction:rtl;line-height:1.8" placeholder="اكتب هنا أذكار، ملاحظات، نص تحفيزي...">${(h.content||'').replace(/</g,'&lt;')}</textarea>
+    </div>
+    <button class="btn p full" onclick="saveHabitNotes('${id}')">حفظ</button>
+  `,{type:'habitNotes',id});
+}
+
+function saveHabitNotes(id){
+  const h=S.habits.find(x=>x.id===id);if(!h)return;
+  h.content=document.getElementById('hn-content')?.value||'';
+  save();closeModal();toast('✅ تم الحفظ');render();
+}
+
 
 function markHabit(id){
   const h=S.habits.find(x=>x.id===id);if(!h)return;
@@ -611,9 +696,11 @@ function markHabit(id){
 function addHabit(){
   const title=document.getElementById('nh-title')?.value.trim();
   if(!title){toast('⚠️ اكتب اسم العادة');return;}
-  S.habits.push({id:uid(),title,
-    cat:document.getElementById('nh-cat')?.value||'other',
+  const type=document.getElementById('nh-type')?.value||'regular';
+  const cat=document.getElementById('nh-cat')?.value||'other';
+  S.habits.push({id:uid(),title,cat,
     frequency:document.getElementById('nh-freq')?.value||'daily',
+    type,content:document.getElementById('nh-content')?.value.trim()||'',
     streak:0,lastDone:'',completions:[]});
   save();toast('✅ تمت الإضافة');render();
 }
@@ -675,12 +762,16 @@ function editHabit(id){
   const h=S.habits.find(x=>x.id===id);if(!h)return;
   const fOpts=`<option value="daily"${h.frequency==='daily'?' selected':''}>يومي</option><option value="weekly"${h.frequency==='weekly'?' selected':''}>أسبوعي</option>`;
   const cOpts=CATS.map(c=>`<option value="${c.id}"${c.id===h.cat?' selected':''}>${c.label}</option>`).join('');
+  const tOpts=`<option value="regular"${(h.type||'regular')==='regular'?' selected':''}>عادية</option><option value="prayer"${h.type==='prayer'?' selected':''}>صلوات</option>`;
   openModal('✏️ تعديل العادة',`
     <label>الاسم</label><input type="text" id="eh-title" value="${h.title.replace(/"/g,'&quot;')}">
     <div class="row2">
+      <div><label>النوع</label><select id="eh-type">${tOpts}</select></div>
       <div><label>التكرار</label><select id="eh-freq">${fOpts}</select></div>
-      <div><label>الفئة</label><select id="eh-cat">${cOpts}</select></div>
     </div>
+    <div><label>الفئة</label><select id="eh-cat">${cOpts}</select></div>
+    <label>محتوى / ملاحظات</label>
+    <textarea id="eh-content" rows="4">${(h.content||'').replace(/</g,'&lt;')}</textarea>
   `,{type:'habit',id});
 }
 
@@ -708,6 +799,8 @@ function saveModal(){
     const h=S.habits.find(x=>x.id===id);if(!h)return;
     const title=gv('eh-title').trim();if(!title){toast('⚠️ اكتب الاسم');return;}
     h.title=title;h.frequency=gv('eh-freq');h.cat=gv('eh-cat');
+    h.type=gv('eh-type')||'regular';
+    h.content=gv('eh-content')||'';
   }
   save();closeModal();toast('✅ تم التعديل');render();
 }
