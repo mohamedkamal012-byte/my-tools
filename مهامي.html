@@ -576,7 +576,8 @@ function rHabits(){
             <span style="font-size:22px">🕌</span>
             <div>
               <div style="font-size:14px;font-weight:700;cursor:pointer" onclick="openHabitNotes('${h.id}')">${h.title}</div>
-              <div style="font-size:12px;color:var(--txm)">${doneCt}/5 صلوات اليوم</div>
+              <div style="font-size:12px;color:var(--txm)">صلوات اليوم — ${(()=>{const d=new Date();return d.getDate()+' '+['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'][d.getMonth()];})()}</div>
+        <div style="font-size:13px;font-weight:700;color:${doneCt===5?'var(--green)':doneCt>=3?'var(--ind)':'var(--txm)'}">${doneCt}/5 ${doneCt===5?'✅ أكملت الصلوات':'صلوات'}</div>
             </div>
           </div>
           <div style="display:flex;gap:4px">
