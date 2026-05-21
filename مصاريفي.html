@@ -97,8 +97,6 @@ textarea{resize:vertical;min-height:50px}
 .edit-btn{background:none;border:none;cursor:pointer;color:var(--txl);font-size:13px;padding:2px 5px;border-radius:4px;flex-shrink:0;transition:all .15s}
 .edit-btn:hover{color:var(--bm);background:var(--bs)}
 </style>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
 <div class="app">
@@ -164,6 +162,7 @@ let S=(()=>{
   return{...defState(),...INIT_DATA};
 })();
 
+function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){toast('⚠️ مساحة ممتلئة');}}
 function today(){return new Date().toISOString().split('T')[0];}
 function fmt(n){return Math.round(n||0)+'€';}
 function fmt2(n){return parseFloat(n||0).toFixed(2)+'€';}
@@ -393,7 +392,7 @@ function rDash(){
 // ── RECEIPT ───────────────────────────────────────────────────
 let rMode='text',xItems=[],xTotal=null;
 
-const RECEIPT_SKIP=/subtotal|sub.?total|sales.?tax|\btax\b|gratuity|\btip\b|service.?charge|mwst|mehrwert|steuer|zwischensumme|pfand|rabatt|discount|saving|you saved|change due|^cash\b|^card\b|terminal|contactless|girocard|ta-nr|belegkunde|kundenbel|ust\.?-?id|öffnungszeit|punkte|kassierer|rechnungs|bestell|lieferung|^versand|trinkgeld|datum|uhrzeit|tel\.|www\.|\btotal\b|إجمالي|مجموع|ضريبة|خدمة|خصم|gst\b|check\s*#|table\s*\d|server\b/i;
+const RECEIPT_SKIP=/subtotal|sub.?total|sales.?tax|\btax\b|gratuity|\btip\b|service.?charge|mwst|mehrwert|steuer|zwischensumme|pfand|rabatt|discount|saving|you saved|change due|^cash\b|^card\b|terminal|contactless|girocard|mastercard|maestro|visa|geg\.|kundenbeleg|ta-nr|belegkunde|kundenbel|ust\.?-?id|öffnungszeit|punkte|kassierer|rechnungs|bestell|lieferung|^versand|trinkgeld|datum|uhrzeit|tel\.|www\.|\btotal\b|^summe\b|إجمالي|مجموع|ضريبة|خدمة|خصم|gst\b|check\s*#|table\s*\d|server\b|^\d+\s*stk\s*x|^\d+\s*x\s*\d/i;
 const RECEIPT_TOTAL=/\btotal\b|إجمالي|مجموع الكلي|zu zahlen|gesamtbetrag|^gesamt\b|^summe\b/i;
 
 function parseReceipt(raw){
@@ -880,49 +879,7 @@ function exportCSV(){
   a.download='مصاريفي_'+today()+'.csv';a.click();toast('✅ CSV جاهز');
 }
 
-
-// ── FIREBASE SYNC ─────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyA9S5V9sWaA_CG6iuNivNMMBmx28MM06lo",
-  authDomain: "my-tools-365ad.firebaseapp.com",
-  databaseURL: "https://my-tools-365ad-default-rtdb.firebaseio.com",
-  projectId: "my-tools-365ad",
-  storageBucket: "my-tools-365ad.firebasestorage.app",
-  messagingSenderId: "628152474457",
-  appId: "1:628152474457:web:2a387d265f18eb18b34a48"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const FB_PATH = '/exp_data';
-let _lastSave = 0;
-
-function save() {
-  _lastSave = Date.now();
-  try { localStorage.setItem(SK, JSON.stringify(S)); } catch(e) {}
-  db.ref(FB_PATH).set(S).catch(function(e) { console.warn('Firebase save error:', e); });
-}
-
-function loadFromFirebase() {
-  db.ref(FB_PATH).once('value').then(function(snap) {
-    var data = snap.val();
-    if (data) {
-      S = Object.assign(defState(), data);
-      try { localStorage.setItem(SK, JSON.stringify(S)); } catch(e) {}
-    }
-    render();
-    db.ref(FB_PATH).on('value', function(snap2) {
-      if (Date.now() - _lastSave < 3000) return;
-      var newData = snap2.val();
-      if (newData && JSON.stringify(newData) !== JSON.stringify(S)) {
-        S = Object.assign(defState(), newData);
-        render();
-        toast('🔄 تم التحديث من جهاز آخر');
-      }
-    });
-  }).catch(function() { render(); });
-}
-
-loadFromFirebase();
+render();
 
 </script>
 </body>
