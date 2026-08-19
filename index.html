@@ -3,7 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#EDEEF0">
+<meta name="theme-color" content="#2F6F62">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kopf+">
+<meta name="mobile-web-app-capable" content="yes">
 <title>MEIN KOPF</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -327,7 +333,7 @@ function askAbout(t){
     '</div>');
 }
 function shrink(id){const t=find(id);close_();editor(t,'صغّر المهمة')}
-function pushDay(id){const t=find(id);const d=parse(t.date||today());d.setDate(d.getDate()+1);t.date=iso(d);save();close_();render()}
+function pushDay(id){const t=find(id);t.moved=(t.moved||0)+1;const d=parse(t.date||today());d.setDate(d.getDate()+1);t.date=iso(d);save();close_();render();say('اتأجلت لبكرة.')}
 function toBox(id){const t=find(id);t.kind='inbox';t.date='';t.moved=0;save();close_();render();say('راحت الصندوق.')}
 function drop(id){const t=find(id);t.status='trash';save();close_();render();say('اتشالت.')}
 
