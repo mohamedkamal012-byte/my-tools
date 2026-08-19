@@ -100,6 +100,8 @@ input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 .stack .b{width:100%;padding:13px}
 .toast{position:fixed;bottom:104px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:14px;padding:9px 18px;border-radius:20px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:30}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -139,7 +141,12 @@ function parse(s){const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&x.tasks)return x}catch(e){}return JSON.parse(JSON.stringify(SEED))}
-function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+let _lastSave=0;
+function save(){
+  _lastSave=Date.now();
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  if(window._fbReady)db.ref(FB_PATH).set(S).catch(function(e){console.warn('sync save:',e)});
+}
 function find(id){return S.tasks.find(t=>t.id===id)}
 function say(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,1600)}
 
@@ -218,6 +225,10 @@ function renderBox(){
     '<div class="muted" style="margin-bottom:8px">حاجات مش في إيدك. مش مهام.</div>';
   s+= w.length? w.map(row).join('') : '<div class="empty">مفيش حاجة مستنيها.</div>';
   s+='<div style="margin-top:12px"><button class="b small" onclick="add(\'waiting\')">+ حاجة مستني ردها</button></div></div>';
+  s+='<div class="card"><h2>لصق من الشات</h2>'+
+    '<div class="muted" style="margin-bottom:8px">الصق مهمة أو مجموعة مهام. بتتضاف فوق اللي موجود، ومش بتمسح حاجة.</div>'+
+    '<textarea id="pasteBox" placeholder="سطر لكل مهمة، أو كود JSON من الشات"></textarea>'+
+    '<div style="margin-top:10px"><button class="b main" onclick="pasteAdd()">أضف</button></div></div>';
   s+='<div class="card"><h2>البيانات</h2><div class="stack">'+
     '<button class="b" onclick="exportJson()">نزّل نسخة</button>'+
     '<button class="b" onclick="document.getElementById(\'picker\').click()">استورد نسخة</button></div>'+
@@ -363,6 +374,37 @@ function mark(id,v){
 function open_(html){document.getElementById('sheet').innerHTML=html;document.getElementById('sheetWrap').classList.add('on')}
 function close_(){document.getElementById('sheetWrap').classList.remove('on')}
 
+function pasteAdd(){
+  const el=document.getElementById('pasteBox');
+  const raw=(el?el.value:'').trim();
+  if(!raw)return say('الصق حاجة الأول');
+  let items=[];
+  try{
+    const j=JSON.parse(raw);
+    items=Array.isArray(j)?j:(j&&Array.isArray(j.tasks)?j.tasks:[j]);
+  }catch(e){
+    items=raw.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
+      const p=l.split('|').map(x=>x.trim());
+      return {title:p[0],step:p[1]||'',date:p[2]||''};
+    });
+  }
+  let n=0;
+  items.forEach(it=>{
+    const title=(it&&it.title||'').trim();
+    if(!title)return;
+    let kind=it.kind||(it.date?'core':'inbox');
+    if(['core','extra','inbox','waiting'].indexOf(kind)<0)kind='inbox';
+    let date=it.date||'';
+    if(kind==='waiting'||kind==='inbox')date='';
+    if(kind==='core'&&core(date).length>=2)kind='extra';
+    S.tasks.push({id:uid(),title:title,step:it.step||'',note:it.note||'',de:it.de||'',
+      date:date,kind:kind,status:'todo',moved:0,spent:0,created:today()});
+    n++;
+  });
+  if(!n)return say('مفيش مهام مفهومة في اللي لصقته');
+  save();render();say(n===1?'اتضافت مهمة.':'اتضافت '+n+' مهام.');
+}
+
 function exportJson(){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}));
@@ -395,6 +437,48 @@ document.getElementById('picker').addEventListener('change',ev=>{
 });
 
 render();
+
+const firebaseConfig={
+  apiKey:"AIzaSyA9S5V9sWaA_CG6iuNivNMMBmx28MM06lo",
+  authDomain:"my-tools-365ad.firebaseapp.com",
+  databaseURL:"https://my-tools-365ad-default-rtdb.firebaseio.com",
+  projectId:"my-tools-365ad",
+  storageBucket:"my-tools-365ad.firebasestorage.app",
+  messagingSenderId:"628152474457",
+  appId:"1:628152474457:web:2a387d265f18eb18b34a48"
+};
+const FB_PATH='/mein_kopf';
+let db;
+try{
+  firebase.initializeApp(firebaseConfig);
+  db=firebase.database();
+  window._fbReady=true;
+}catch(e){window._fbReady=false}
+
+function startSync(){
+  if(!window._fbReady)return;
+  db.ref(FB_PATH).once('value').then(function(snap){
+    const cloud=snap.val();
+    if(cloud&&cloud.tasks&&cloud.tasks.length){
+      S=cloud;
+      try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+      render();
+    }else{
+      save();
+    }
+    db.ref(FB_PATH).on('value',function(s2){
+      if(Date.now()-_lastSave<3000)return;
+      const nd=s2.val();
+      if(nd&&nd.tasks&&JSON.stringify(nd)!==JSON.stringify(S)){
+        S=nd;
+        try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+        render();say('اتحدّثت من جهاز تاني.');
+      }
+    });
+  }).catch(function(){});
+}
+startSync();
+
 </script>
 </body>
 </html>
