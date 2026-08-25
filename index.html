@@ -118,13 +118,6 @@ input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 .stack{display:flex;flex-direction:column;gap:9px;margin-top:18px}
 .stack .b{width:100%;padding:13px}
 .toast{position:fixed;bottom:104px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:14px;padding:9px 18px;border-radius:20px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:30}
-
-/* FINAL v4 */
-.taskTag{display:inline-block;margin:5px 0 0 5px;padding:1px 8px;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-size:11px}
-.dragTask{border:0;background:none;color:var(--soft);font-size:19px;padding:0 2px;cursor:grab;touch-action:none}.item.dragging{opacity:.35}.item.dropTarget{border-top:2px solid var(--accent)}
-.tagChoices{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}.tagChoice{border:1px solid var(--line);background:var(--card);padding:7px 11px;border-radius:18px;font-size:13px}.tagChoice.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.overdue{border-color:#d6b98c}.projectStage{padding:10px 0;border-top:1px solid var(--line)}.projectStage:first-of-type{border-top:0}.stageDone{color:var(--soft);text-decoration:line-through}
-.rangeTag{color:var(--ochre);background:var(--ochre-soft)}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -132,7 +125,7 @@ input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 <body>
 
 <div class="wrap">
-  <h1>MEIN KOPF · FINAL v4</h1>
+  <h1>MEIN KOPF · v4.2</h1>
 
   <section id="s-today" class="screen on"></section>
   <section id="s-box" class="screen"></section>
@@ -200,7 +193,7 @@ function render(){renderToday();renderBox();renderWeek();renderLog();renderProgr
 
 function clock(){const m=String(Math.floor(tSec/60)).padStart(2,'0'),s=String(tSec%60).padStart(2,'0');return m+':'+s}
 
-function renderTodayBase(){
+function renderToday(){
   const d=parse(view), t=current(), c=core(view), e=extra(view);
   const left=c.filter(x=>x.status!=='done').length;
   let now;
@@ -248,7 +241,7 @@ function renderTodayBase(){
 
   s+='<div class="card"><div class="head"><h2>إضافي</h2><span class="muted">مش لازم</span></div>';
   s+= e.length? e.map(row).join('') : '<div class="empty">مفيش.</div>';
-  s+='<div style="margin-top:12px"><button class="b small" onclick="add(\'extra\')">+ إضافة خفيفة</button></div></div>';
+  s+='<div style="margin-top:12px"><button class="b small" onclick="quickExtra(view)">+ إضافة خفيفة</button></div></div>';
 
   document.getElementById('s-today').innerHTML=s;
 }
@@ -262,7 +255,7 @@ function row(t){
     '</div><button class="dots" onclick="menu(\''+t.id+'\')" aria-label="خيارات">···</button></div>';
 }
 
-function renderBoxBase(){
+function renderBox(){
   const i=inbox(), w=waiting();
   const tpls=sortedTemplates();
   let s='<div class="card"><div class="head"><h2>المتكرر</h2><span class="muted">'+tpls.length+'</span></div>'+
@@ -398,6 +391,12 @@ function saveQuick(){
   save();close_();render();say('اتحفظت.');
 }
 
+function quickExtra(date){
+  const tpls=sortedTemplates().filter(t=>(t.kind||'extra')==='extra');
+  open_('<h3>اختار إضافة خفيفة</h3><div class="muted" style="margin-bottom:8px">اضغط على الاختيار عشان يتضاف فورًا لليوم.</div>'+
+    (tpls.length?chipsForDate(tpls,date):'<div class="empty">مفيش قوالب إضافية. أضف قالب من الصندوق الأول.</div>')+
+    '<div class="stack"><button class="b" onclick="close_();add(\'extra\')">إضافة جديدة بالكتابة</button><button class="b quiet" onclick="close_()">إلغاء</button></div>');
+}
 function add(kind){
   editor({id:'',title:'',step:'',date:kind==='waiting'?'':view,kind:kind,status:'todo',moved:0},
     kind==='waiting'?'حاجة مستني ردها':'مهمة جديدة');
@@ -634,24 +633,37 @@ function saveAsTemplate(id){
 function editTemplates(){
   const tpls=sortedTemplates();
   open_('<h3>القوالب المتكررة</h3>'+
-    (tpls.length?'<div class="muted" style="margin-bottom:8px">اضغط مطولًا على المقبض واسحب لترتيب.</div><div id="tplList">'+tpls.map(t=>
-      '<div class="tplRow" data-id="'+t.id+'" style="display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-top:1px solid var(--line);background:var(--card)">'+
-        '<span class="dragHandle" style="touch-action:none;cursor:grab;color:var(--soft);font-size:18px;padding:2px 4px;line-height:1.5" onpointerdown="tplDragStart(event,\''+t.id+'\')">⋮⋮</span>'+
-        '<div style="flex:1;min-width:0">'+
-          '<div class="row" style="justify-content:space-between;align-items:center">'+
-            '<span style="font-size:15px">'+esc(t.title)+'</span>'+
-            '<span class="row" style="gap:6px">'+
-              '<button class="b small'+(t.tracked?' main':'')+'" onclick="toggleTrack(\''+t.id+'\')">'+(t.tracked?'بتتابعها ✓':'تابعها')+'</button>'+
-              '<button class="b small" onclick="delTemplate(\''+t.id+'\')">احذف</button>'+
-            '</span></div>'+
-          '<div class="muted" style="margin-top:4px">السياق: '+(t.context||'عام')+
-            ' — <a href="#" onclick="event.preventDefault();setContext(\''+t.id+'\')" style="color:var(--accent)">غيّر</a></div>'+
-        '</div>'+
-      '</div>').join('')+'</div>'
-     :'<div class="muted">مفيش قوالب. من قايمة أي مهمة اختار «احفظها في المتكرر».</div>')+
+    (tpls.length?'<div class="muted" style="margin-bottom:8px">اسحب من المقبض للترتيب، أو استخدم الأسهم. الترتيب بيتحفظ ويظهر فورًا.</div><div id="tplList">'+tpls.map((t,i)=>
+      '<div class="tplRow" data-id="'+t.id+'" style="display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-top:1px solid var(--line);background:var(--card)">'+
+        '<span class="dragHandle" style="touch-action:none;cursor:grab;color:var(--soft);font-size:19px;padding:4px" onpointerdown="tplDragStart(event,\''+t.id+'\')">⋮⋮</span>'+
+        '<div style="flex:1;min-width:0"><div style="font-size:15px">'+esc(t.title)+'</div><div class="muted">'+esc(t.note||'مفيش وصف')+'</div><div class="muted">السياق: '+esc(t.context||'عام')+'</div>'+
+        '<div class="row" style="margin-top:8px;gap:6px">'+
+          '<button class="b small" onclick="editTemplate(\''+t.id+'\')">تعديل</button>'+
+          '<button class="b small" '+(i===0?'disabled':'')+' onclick="moveTemplate(\''+t.id+'\',-1)">↑</button>'+
+          '<button class="b small" '+(i===tpls.length-1?'disabled':'')+' onclick="moveTemplate(\''+t.id+'\',1)">↓</button>'+
+          '<button class="b small'+(t.tracked?' main':'')+'" onclick="toggleTrack(\''+t.id+'\')">'+(t.tracked?'بتتابعها ✓':'تابعها')+'</button>'+
+          '<button class="b small" onclick="delTemplate(\''+t.id+'\')">احذف</button></div></div></div>').join('')+'</div>':'<div class="empty">مفيش قوالب.</div>')+
     '<div class="stack"><button class="b quiet" onclick="close_()">تمام</button></div>');
 }
-
+function editTemplate(id){
+  const t=(S.templates||[]).find(x=>x.id===id);if(!t)return;
+  open_('<h3>تعديل القالب</h3><label for="etTitle">الاسم</label><input id="etTitle" value="'+esc(t.title)+'">'+
+    '<label for="etNote">الوصف</label><textarea id="etNote">'+esc(t.note||'')+'</textarea>'+
+    '<label for="etKind">النوع</label><select id="etKind" style="width:100%;font-family:inherit;font-size:16px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px"><option value="extra" '+(t.kind==='extra'?'selected':'')+'>إضافي</option><option value="core" '+(t.kind==='core'?'selected':'')+'>أساسي</option></select>'+
+    '<label for="etContext">السياق</label><select id="etContext" style="width:100%;font-family:inherit;font-size:16px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px">'+['عام','برا','البيت','أونلاين'].map(c=>'<option value="'+c+'" '+((t.context||'عام')===c?'selected':'')+'>'+c+'</option>').join('')+'</select>'+
+    '<div class="stack"><button class="b main" onclick="saveTemplateEdit(\''+id+'\')">احفظ التعديل</button><button class="b quiet" onclick="editTemplates()">رجوع</button></div>');
+}
+function saveTemplateEdit(id){
+  const t=(S.templates||[]).find(x=>x.id===id);if(!t)return;
+  const title=document.getElementById('etTitle').value.trim();if(!title)return say('اكتب اسم القالب');
+  t.title=title;t.note=document.getElementById('etNote').value.trim();t.kind=document.getElementById('etKind').value;
+  const c=document.getElementById('etContext').value;t.context=c==='عام'?'':c;
+  save();editTemplates();render();say('التعديل اتحفظ.');
+}
+function moveTemplate(id,dir){
+  const arr=sortedTemplates();const i=arr.findIndex(t=>t.id===id),j=i+dir;if(i<0||j<0||j>=arr.length)return;
+  [arr[i],arr[j]]=[arr[j],arr[i]];arr.forEach((t,k)=>t.order=k);S.templates=arr;save();editTemplates();render();
+}
 function tplDragStart(e,id){
   e.preventDefault();
   const list=document.getElementById('tplList'); if(!list)return;
@@ -677,13 +689,14 @@ function tplDragEnd(e){
   if(!window._dragId)return;
   const dy=e.clientY-window._dragStartY;
   const steps=Math.round(dy/(window._dragRowH||44));
-  const arr=S.templates;
+  const arr=sortedTemplates();
   const fromIdx=arr.findIndex(t=>t.id===window._dragId);
   if(fromIdx>-1){
     const newIdx=Math.max(0,Math.min(arr.length-1,fromIdx+steps));
     const[moved]=arr.splice(fromIdx,1);
     arr.splice(newIdx,0,moved);
     arr.forEach((t,i)=>t.order=i);
+    S.templates=arr;
     save();
   }
   window._dragId=null;
@@ -813,88 +826,8 @@ document.getElementById('picker').addEventListener('change',ev=>{
   r.readAsText(f); ev.target.value='';
 });
 
-
-/* ===== FINAL v4 upgrade: keeps the user's names and data ===== */
-let taskDragId=null;
-function normalizeTags(x){
-  if(Array.isArray(x.tags))return x.tags;
-  if(x.context)return [x.context];
-  return [];
-}
-function upgradeData(){
-  if(!S.templates)S.templates=[];
-  if(!S.tasks)S.tasks=[];
-  if(!S.projects)S.projects=[];
-  S.templates.forEach((t,i)=>{t.order=t.order===undefined?i:t.order;t.tags=normalizeTags(t);if(t.tracked===undefined)t.tracked=false});
-  const addTpl=t=>{if(!S.templates.some(x=>x.id===t.id||x.title===t.title))S.templates.push(t)};
-  addTpl({id:'tpl-penta',order:-2,title:'PENTA',step:'',note:'اشتغل على المرحلة الحالية فقط من مشروع PENTA.',de:'Aktuelle Projektphase bearbeiten.',kind:'core',tracked:true,context:'البيت',tags:['البيت','كمبيوتر','تركيز'],projectId:'project-penta'});
-  addTpl({id:'tpl-serie',order:99,title:'Deutsche Serie ansehen',step:'',note:'شاهد جزءًا من مسلسل ألماني وركّز على الفهم العام من غير توقف كثير.',de:'Einen Teil einer deutschen Serie ansehen.',kind:'extra',tracked:true,context:'البيت',tags:['البيت'],aliases:['Eine deutsche Serie ansehen']});
-  const aliases={
-    tpl1:['telc C1 Hochschule: Vorbereitung','telc Deutsch C1 Hochschule'],
-    tpl2:['Jobsuche','Jobsuche: Nachrichten'],
-    tpl3:['أربعة آلاف أسبوع','4000 اسبوع','كتاب 4000 اسبوع','Viertausend Wochen: Lesen'],
-    tpl4:['Der Fluch des Warum','Deutsche Gedanken: Lesen','Verdammt, warum?: Lesen'],
-    tpl5:['UX Design Sprache','Deutsch im Beruf','D&D: Deutsch im Design'],
-    tpl6:['استماع + Shadowing','Deutsch hören und Shadowing üben','YouTube Hören + Shadowing'],
-    'tpl-penta':['PENTA'],
-    'tpl-serie':['Deutsche Serie ansehen','Eine deutsche Serie ansehen']
-  };
-  S.templates.forEach(t=>{t.aliases=[...new Set([...(t.aliases||[]),...(aliases[t.id]||[])])];t.tags=normalizeTags(t)});
-  S.tasks.forEach((t,i)=>{
-    t.order=t.order===undefined?i:t.order;t.tags=normalizeTags(t);
-    if(!t.templateId){const q=S.templates.find(p=>(p.aliases||[]).some(a=>t.title===a||t.title.indexOf(a+':')===0));if(q)t.templateId=q.id}
-  });
-  const addProject=p=>{if(!S.projects.some(x=>x.id===p.id))S.projects.push(p)};
-  addProject({id:'project-penta',title:'PENTA',templateId:'tpl-penta',active:0,stages:[
-    {title:'المرحلة الحالية',note:'حدّد واكتب خطوة PENTA الحالية قبل إضافتها لليوم.'},
-    {title:'المراجعة',note:'راجع المنطق والتصميم والمخرجات.'},
-    {title:'التسليم',note:'جهّز النسخة النهائية وأرسلها.'}
-  ]});
-  addProject({id:'project-master',title:'الماجستير: التأكد من الملاءمة والأوراق',active:0,stages:[
-    {title:'هل البرنامج مناسب؟',note:'قارن محتوى البرنامج بأهدافك وخلفيتك.'},
-    {title:'شروط القبول واللغة',note:'راجع المؤهل واللغة والمتطلبات الأكاديمية.'},
-    {title:'الأوراق الناقصة',note:'اعمل قائمة واضحة بكل مستند ناقص.'},
-    {title:'المواعيد وطريقة التقديم',note:'راجع الموعد النهائي وخطوات إرسال الطلب.'},
-    {title:'التواصل مع الجامعة',note:'اسأل فقط عن النقاط التي لم تجد لها إجابة واضحة.'}
-  ]});
-  S.version=4;
-  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
-}
-function inDay(t,d){return !!t.date&&((t.endDate&&t.date<=d&&d<=t.endDate)||(!t.endDate&&t.date===d))}
-function ofDay(d,kind){return S.tasks.filter(t=>t.kind===kind&&t.status!=='trash'&&inDay(t,d)).sort((a,b)=>(a.order||0)-(b.order||0))}
-function overdue(){return S.tasks.filter(t=>t.status==='todo'&&['core','extra'].includes(t.kind)&&t.date&&t.date<today()&&!t.endDate)}
-function current(){return core(view).find(t=>t.status!=='done')||extra(view).find(t=>t.status!=='done')||null}
-function tagsHTML(t){return normalizeTags(t).map(x=>'<span class="taskTag">#'+esc(x)+'</span>').join('')+(t.endDate?'<span class="taskTag rangeTag">'+esc(t.date)+' ← '+esc(t.endDate)+'</span>':'')}
-function row(t){
-  const done=t.status==='done',dr=['core','extra'].includes(t.kind);
-  return '<div class="item" data-task="'+t.id+'" '+(dr?'draggable="true" ondragstart="taskDragStart(event,\''+t.id+'\')" ondragover="taskDragOver(event)" ondragleave="taskDragLeave(event)" ondrop="taskDrop(event,\''+t.id+'\')" ondragend="taskDragEnd(event)"':'')+'>'+
-    (dr?'<button class="dragTask" aria-label="اسحب للترتيب">⋮⋮</button>':'')+'<div class="tick '+(done?'on':'')+'" onclick="toggle(\''+t.id+'\')"></div><div class="itemBody"><div class="itemTitle '+(done?'done':'')+'">'+esc(t.title)+'</div>'+((t.step||t.note)&&!done?'<div class="itemSub">'+esc(t.step||t.note)+'</div>':'')+(!done?tagsHTML(t):'')+(t.moved>=3&&!done?'<span class="flag">اتأجلت '+t.moved+' مرات</span>':'')+'</div><button class="dots" onclick="menu(\''+t.id+'\')">···</button></div>';
-}
-function taskDragStart(e,id){taskDragId=id;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
-function taskDragOver(e){e.preventDefault();e.currentTarget.classList.add('dropTarget')}
-function taskDragLeave(e){e.currentTarget.classList.remove('dropTarget')}
-function taskDragEnd(e){e.currentTarget.classList.remove('dragging');document.querySelectorAll('.dropTarget').forEach(x=>x.classList.remove('dropTarget'))}
-function taskDrop(e,target){e.preventDefault();if(!taskDragId||taskDragId===target)return;const a=find(taskDragId),b=find(target);if(!a||!b)return;const arr=S.tasks.filter(x=>x.date===b.date&&x.kind===b.kind&&x.status!=='trash').sort((x,y)=>(x.order||0)-(y.order||0));const from=arr.findIndex(x=>x.id===a.id),to=arr.findIndex(x=>x.id===b.id);if(from<0||to<0)return;arr.splice(to,0,arr.splice(from,1)[0]);arr.forEach((x,i)=>x.order=i);save();render();say('اترتبت.');taskDragId=null}
-function contextChoices(selected){const all=['البيت','برا','مواصلات','انتظار','تركيز','كمبيوتر','موبايل','أي مكان'];return '<div class="tagChoices">'+all.map(x=>'<button type="button" class="tagChoice '+(selected.includes(x)?'on':'')+'" data-tag="'+x+'" onclick="this.classList.toggle(\'on\')">#'+x+'</button>').join('')+'</div>'}
-function editor(t,title){
-  const w=t.kind==='waiting',tags=normalizeTags(t);
-  open_('<h3>'+(title||'تعديل')+'</h3><label for="f1">'+(w?'مستني إيه؟':'المهمة')+'</label><input id="f1" value="'+esc(t.title)+'">'+(w?'':'<label for="f2">الخطوة الأولى</label><input id="f2" value="'+esc(t.step)+'" placeholder="حاجة تعملها في دقيقتين"><div class="muted" style="font-size:12px;margin-top:6px">خلي البداية صغيرة وواضحة.</div><label>المكان والسياق، اختياري</label>'+contextChoices(tags))+'<div class="stack"><button class="b main" onclick="saveEditor(\''+t.id+'\',\''+t.kind+'\',\''+(t.date||'')+'\')">احفظ</button><button class="b quiet" onclick="close_()">إلغاء</button></div>');setTimeout(()=>document.getElementById('f1').focus(),60)
-}
-function saveEditor(id,kind,date){const title=document.getElementById('f1').value.trim();if(!title)return say('اكتب العنوان');const f=document.getElementById('f2'),step=f?f.value.trim():'';const tags=[...document.querySelectorAll('.tagChoice.on')].map(x=>x.dataset.tag);if(id){const t=find(id);t.title=title;t.step=step;t.tags=tags;t.context=tags[0]||'';t.kind=kind;t.date=date}else S.tasks.push({id:uid(),title,step,note:'',de:'',tags,context:tags[0]||'',date,kind,status:'todo',moved:0,order:S.tasks.length,created:today()});save();close_();render()}
-function addTemplateOccurrence(t,date,endDate=''){let kind=t.kind||'extra';if(kind==='core'&&core(date).length>=2)kind='extra';const p=t.projectId?(S.projects||[]).find(x=>x.id===t.projectId):null;const stage=p&&p.stages[p.active];S.tasks.push({id:uid(),templateId:t.id,projectId:t.projectId||'',title:t.title,step:stage?stage.title:(t.step||''),note:stage?stage.note:(t.note||''),de:t.de||'',tags:normalizeTags(t),context:t.context||'',date,endDate,kind,status:'todo',moved:0,spent:0,order:S.tasks.length,created:today()});return kind}
-function applyTemplateRange(id,startDate,endDate){const t=(S.templates||[]).find(x=>x.id===id);if(!t||!startDate)return;let end=endDate||'';if(end&&end<startDate){const z=startDate;startDate=end;end=z}const kind=addTemplateOccurrence(t,startDate,end);save();close_();render();say(end?'اتضافت كمهمة واحدة خلال الفترة.':t.title+' → '+dayLabel(startDate)+(kind==='extra'&&t.kind==='core'?' (إضافي)':''))}
-function advanceProject(t){if(!t.projectId)return;const p=(S.projects||[]).find(x=>x.id===t.projectId);if(p&&p.active<p.stages.length)p.active++}
-function done(id){const t=find(id);if(!t)return;if(tId===id){t.spent=(t.spent||0)+tSec;clearInterval(timer);timer=null;tId=null;tSec=0}t.status='done';t.doneAt=today();advanceProject(t);save();render();say('تمام.')}
-function toggle(id){const t=find(id);if(!t)return;if(t.status==='done'){t.status='todo';delete t.doneAt}else{t.status='done';t.doneAt=today();advanceProject(t)}save();render()}
-function countTemplate(t,month){return S.tasks.filter(x=>x.status==='done'&&x.doneAt&&(!month||monthKey(x.doneAt)===month)&&(x.templateId===t.id||(!x.templateId&&(t.aliases||[]).includes(x.title)))).length}
-function renderProgress(){const tracked=(S.templates||[]).filter(t=>t.tracked),mo=monthKey(today()),moName=MON[parseInt(mo.split('-')[1])-1];let s='<div class="muted" style="margin-bottom:12px">عدد مرات التنفيذ من غير Streak أو ضغط يومي.</div>';s+=tracked.length?tracked.map(t=>{const m=countTemplate(t,mo),all=countTemplate(t,null);return '<div class="card"><div class="head"><h2>'+esc(t.title)+'</h2></div><div class="nowTitle" style="font-size:22px;margin-bottom:2px">'+m+'</div><div class="muted">مرة في '+esc(moName)+'</div><div class="muted" style="margin-top:6px">من الأول: '+all+'</div></div>'}).join(''):'<div class="card"><div class="empty">اختار «تابعها» من تعديل القوالب.</div></div>';document.getElementById('s-progress').innerHTML=s}
-function projectHTML(){const ps=S.projects||[];return '<div class="card"><div class="head"><h2>المشروعات المرحلية</h2></div><div class="muted" style="margin-bottom:8px">كل مشروع يعرض المرحلة الحالية فقط.</div>'+ps.map(p=>{const i=Math.min(p.active||0,p.stages.length),done=i>=p.stages.length,st=p.stages[i];return '<div class="projectStage"><div class="itemTitle '+(done?'stageDone':'')+'">'+esc(p.title)+'</div><div class="itemSub">'+(done?'كل المراحل خلصت.':'المرحلة '+(i+1)+' من '+p.stages.length+': '+esc(st.title))+'</div>'+(!done?'<div class="muted">'+esc(st.note)+'</div>':'')+'</div>'}).join('')+'</div>'}
-function renderBox(){renderBoxBase();const el=document.getElementById('s-box');if(el)el.insertAdjacentHTML('afterbegin',projectHTML())}
-function renderToday(){renderTodayBase();const old=overdue();if(!old.length)return;const el=document.getElementById('s-today');const box='<div class="card overdue"><div class="head"><h2>متأخر</h2><span class="muted">'+old.length+'</span></div><div class="muted">دول مش هيختفوا جوه أيام قديمة.</div>'+old.map(t=>row(t)+'<div class="row" style="margin-bottom:8px"><button class="b small" onclick="moveOverdue(\''+t.id+'\')">انقل لليوم</button><button class="b small" onclick="toBox(\''+t.id+'\')">للصندوق</button></div>').join('')+'</div>';el.insertAdjacentHTML('afterbegin',box)}
-function moveOverdue(id){const t=find(id);if(!t)return;t.date=today();t.endDate='';save();render();say('اتنقلت للنهارده.')}
-
-upgradeData();
 render();
+
 const FB_KEY='mein_kopf_fb';
 const DEFAULT_FB={
   apiKey:"AIzaSyA9S5V9sWaA_CG6iuNivNMMBmx28MM06lo",
@@ -925,7 +858,7 @@ function startSync(){
   db.ref(FB_PATH).once('value').then(function(snap){
     const cloud=snap.val();
     if(cloud&&cloud.tasks&&cloud.tasks.length){
-      S=cloud;if(!S.templates)S.templates=SEED.templates;upgradeData();
+      S=cloud;if(!S.templates)S.templates=SEED.templates;
       try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
       render();
     }else{
@@ -935,7 +868,7 @@ function startSync(){
       if(Date.now()-_lastSave<3000)return;
       const nd=s2.val();
       if(nd&&nd.tasks&&JSON.stringify(nd)!==JSON.stringify(S)){
-        S=nd;if(!S.templates)S.templates=SEED.templates;upgradeData();
+        S=nd;if(!S.templates)S.templates=SEED.templates;
         try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
         render();say('اتحدّثت من جهاز تاني.');
       }
