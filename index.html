@@ -77,7 +77,9 @@ button:active{opacity:.65}
 .dayNavMid{text-align:center;font-size:15px;font-weight:500;flex:1}
 .navArrow{border:1px solid var(--line);background:var(--card);color:var(--ink);
   width:40px;height:40px;border-radius:50%;font-size:20px;line-height:1;flex:0 0 auto}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;margin-bottom:14px}
+.chips:last-child{margin-bottom:0}
+.ctxLabel{font-size:12px;color:var(--soft);font-weight:500;margin:0 0 6px}
 .chip{background:var(--accent-soft);border:1px solid var(--accent-soft);color:var(--accent);
   border-radius:20px;padding:8px 14px;font-size:14px;font-family:inherit;cursor:pointer}
 .search{margin-bottom:10px}
@@ -99,7 +101,7 @@ button:active{opacity:.65}
 
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line)}
 .navIn{max-width:520px;margin:0 auto;display:flex;padding:8px 0 22px}
-.nb{flex:1;border:none;background:none;color:var(--soft);font-size:13px;padding:8px 0}
+.nb{flex:1;border:none;background:none;color:var(--soft);font-size:12px;padding:8px 0}
 .nb.on{color:var(--accent);font-weight:500}
 
 .sheetWrap{display:none;position:fixed;inset:0;background:rgba(32,38,43,.34);z-index:20;align-items:flex-end;justify-content:center}
@@ -116,6 +118,13 @@ input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 .stack{display:flex;flex-direction:column;gap:9px;margin-top:18px}
 .stack .b{width:100%;padding:13px}
 .toast{position:fixed;bottom:104px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:14px;padding:9px 18px;border-radius:20px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:30}
+
+/* FINAL v4 */
+.taskTag{display:inline-block;margin:5px 0 0 5px;padding:1px 8px;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-size:11px}
+.dragTask{border:0;background:none;color:var(--soft);font-size:19px;padding:0 2px;cursor:grab;touch-action:none}.item.dragging{opacity:.35}.item.dropTarget{border-top:2px solid var(--accent)}
+.tagChoices{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}.tagChoice{border:1px solid var(--line);background:var(--card);padding:7px 11px;border-radius:18px;font-size:13px}.tagChoice.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.overdue{border-color:#d6b98c}.projectStage{padding:10px 0;border-top:1px solid var(--line)}.projectStage:first-of-type{border-top:0}.stageDone{color:var(--soft);text-decoration:line-through}
+.rangeTag{color:var(--ochre);background:var(--ochre-soft)}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -123,12 +132,13 @@ input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 <body>
 
 <div class="wrap">
-  <h1>MEIN KOPF</h1>
+  <h1>MEIN KOPF · FINAL v4</h1>
 
   <section id="s-today" class="screen on"></section>
   <section id="s-box" class="screen"></section>
   <section id="s-week" class="screen"></section>
   <section id="s-log" class="screen"></section>
+  <section id="s-progress" class="screen"></section>
 </div>
 
 <button class="fab" onclick="capture()" aria-label="إضافة">+</button>
@@ -138,6 +148,7 @@ input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
   <button class="nb" onclick="go('box',this)">الصندوق</button>
   <button class="nb" onclick="go('week',this)">الأسبوع</button>
   <button class="nb" onclick="go('log',this)">السجل</button>
+  <button class="nb" onclick="go('progress',this)">التقدم</button>
 </div></nav>
 
 <div class="sheetWrap" id="sheetWrap" onclick="if(event.target===this)close_()"><div class="sheet" id="sheet"></div></div>
@@ -150,7 +161,7 @@ const DAY_START=4;
 const DAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 const MON=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
-const SEED={"tasks": [{"id": "corrected-1", "title": "PENTA: Re-Briefing analysieren", "step": "", "note": "اقرأ البريف وحدد المشكلة والمستخدم والمطلوب والأسئلة المفتوحة.", "de": "Brief lesen und Problem, Zielgruppe, Deliverables und offene Fragen notieren.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-2", "title": "Jobsuche", "step": "", "note": "راجع الرسائل المهمة والتقديمات الضرورية فقط.", "de": "Nur wichtige Nachrichten und Bewerbungen bearbeiten.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-5", "title": "Schwimmbad mit Tobi & Basti", "step": "", "note": "السباحة مع توبي وباستي.", "de": "Gemeinsam schwimmen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-4", "title": "Deutsche Gedanken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من مقالاتك بالألماني.", "de": "Einen kurzen Abschnitt lesen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-3", "title": "Rundfunkbeitrag", "step": "", "note": "خد رقم الاشتراك من صاحبك في السكن لأنه بيدفع بالفعل.", "de": "Beitragsnummer vom Mitbewohner bekommen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-6", "title": "PENTA: Re-Briefing schreiben", "step": "", "note": "اكتب المسودة الأولى الكاملة للـRe-Briefing.", "de": "Erste vollständige Version schreiben.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-7", "title": "Steakschmiede: Vorbereitung", "step": "", "note": "ذاكر طبيعة شغل المطعم والمكونات والأدوات والجمل المهمة.", "de": "Arbeitsabläufe, Zutaten, Geräte und wichtige Sätze lernen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-9", "title": "DW Hören", "step": "", "note": "استماع 15 دقيقة فقط.", "de": "15 Minuten hören.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-8", "title": "Jobsuche", "step": "", "note": "راجع الرسائل وقدّم على فرص مناسبة.", "de": "Nachrichten prüfen und passende Bewerbungen senden.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-10", "title": "تمارين سويدي", "step": "", "note": "تمارين سويدي خفيفة بوزن الجسم. دي رياضة، مش تدريب المطعم.", "de": "Leichtes Krafttraining mit dem eigenen Körpergewicht.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-11", "title": "PENTA: Re-Briefing finalisieren", "step": "", "note": "راجع الترتيب والمنطق واللغة وجهّز النسخة النهائية.", "de": "Struktur, Logik und Sprache prüfen. Versandfertig machen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-12", "title": "Steakschmiede: Probetag", "step": "", "note": "يوم التجربة في المطعم ببوخوم، تقريبًا من 5 إلى 6 ساعات.", "de": "Probetag in Bochum, etwa fünf bis sechs Stunden.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-14", "title": "Jobsuche: Nachrichten", "step": "", "note": "راجع الرسائل العاجلة فقط.", "de": "Nur dringende Nachrichten prüfen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-13", "title": "Probetag vorbereiten", "step": "", "note": "جهز الملابس والطريق والأكل والمياه.", "de": "Kleidung, Weg, Essen und Wasser vorbereiten.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-15", "title": "PENTA: Re-Briefing senden", "step": "", "note": "اعمل مراجعة أخيرة وابعت الـRe-Briefing في وقت آمن.", "de": "Letzte Kontrolle und rechtzeitig senden.", "date": "2026-08-14", "kind": "core", "status": "done", "moved": 0, "spent": 0, "doneAt": "2026-08-14", "created": "2026-08-11"}, {"id": "corrected-16", "title": "Steakschmiede: Probetag auswerten", "step": "", "note": "سجل باختصار اللي حصل والخطوة التالية.", "de": "Erfahrung und nächste Schritte kurz notieren.", "date": "2026-08-14", "kind": "core", "status": "done", "moved": 0, "spent": 0, "doneAt": "2026-08-14", "created": "2026-08-11"}, {"id": "corrected-18", "title": "Deutsch B1+/B2", "step": "", "note": "جلسة ألماني عامة قصيرة أو متوسطة.", "de": "Kurze bis mittlere Lerneinheit.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-20", "title": "إجازة مع الأصدقاء", "step": "", "note": "إجازة كاملة من غير تعويض للمهام.", "de": "Vollständiger Ruhetag.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-21", "title": "Telekom-Test: Vorbereitung", "step": "", "note": "جهز اللابتوب والإنترنت والمكان الهادئ واقرأ تعليمات الاختبار.", "de": "Laptop, Internet, ruhigen Platz und Testbedingungen prüfen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-22", "title": "Telekom-Test", "step": "", "note": "اختبار أونلاين حوالي 90 دقيقة. عدّل الساعة لو اخترت وقتًا مختلفًا.", "de": "Online-Test, ungefähr 90 Minuten. Uhrzeit bei Bedarf ändern.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-24", "title": "Deutsch B1+/B2", "step": "", "note": "فقط لو لسه عندك طاقة بعد الاختبار.", "de": "Nur wenn nach dem Test Energie bleibt.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-23", "title": "Jobsuche", "step": "", "note": "راجع التقديمات والردود المفتوحة.", "de": "Offene Bewerbungen und Antworten prüfen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-25", "title": "PENTA: Feedback prüfen", "step": "", "note": "اقرأ Feedback سفين وسجل التعديلات، وبعدها نوزع فترة الـ14 يوم بدقة.", "de": "Svens Feedback lesen und Änderungen notieren. Danach die 14 Tage genau planen.", "date": "", "kind": "waiting", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-26", "title": "Jobsuche", "step": "", "note": "اشتغل على التقديمات والردود المفتوحة.", "de": "Bewerbungen und offene Rückmeldungen bearbeiten.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-27", "title": "Deutsch B1+/B2", "step": "", "note": "جلسة عادية في شات الألماني العام.", "de": "Normale Lerneinheit im Deutsch-Chat.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "smart-004", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-007", "title": "Deutsch im Beruf", "step": "", "note": "نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "de": "Eine kurze Aufgabe im Chat Deutsch Design Beruf bearbeiten.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-005", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-006", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-063", "title": "Telekom-Test", "step": "", "note": "اعمل اختبار تليكوم لو عندك وقت وطاقة. مش أساسي ومش مربوط بساعة.", "de": "Online-Test nur durchführen, wenn genug Zeit und Energie vorhanden sind.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-008", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-19", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-011", "title": "Deutsche Gedanken: Lesen", "step": "", "note": "اقرأ جزءًا واحدًا فقط من مقالاتك بالألماني في الشات المخصص.", "de": "Einen kurzen Abschnitt aus dem aktuellen Text lesen.", "date": "2026-08-19", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-009", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-19", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-010", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-19", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-012", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-20", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-060", "title": "Sprachcafé TU Dortmund", "step": "", "note": "لقاء محادثة ألماني في IBZ، Emil-Figge-Straße 59, 44227 Dortmund. اختياري ولا يحتاج تسجيلًا مسبقًا.", "de": "Deutsches Sprachcafé im IBZ der TU Dortmund.", "date": "2026-08-20", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-015", "title": "Deutsch im Beruf", "step": "", "note": "نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "de": "Eine kurze Aufgabe im Chat Deutsch Design Beruf bearbeiten.", "date": "2026-08-20", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-013", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-20", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-014", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-20", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-016", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-21", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-019", "title": "Deutsche Gedanken: Lesen", "step": "", "note": "اقرأ جزءًا واحدًا فقط من مقالاتك بالألماني في الشات المخصص.", "de": "Einen kurzen Abschnitt aus dem aktuellen Text lesen.", "date": "2026-08-21", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-017", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-21", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-018", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-21", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-020", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-22", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-023", "title": "Deutsch im Beruf", "step": "", "note": "نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "de": "Eine kurze Aufgabe im Chat Deutsch Design Beruf bearbeiten.", "date": "2026-08-22", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-021", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-22", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-022", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-22", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-024", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-23", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-027", "title": "Deutsche Gedanken: Lesen", "step": "", "note": "اقرأ جزءًا واحدًا فقط من مقالاتك بالألماني في الشات المخصص.", "de": "Einen kurzen Abschnitt aus dem aktuellen Text lesen.", "date": "2026-08-23", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-025", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-23", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-026", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-23", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-028", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-24", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-031", "title": "Deutsch im Beruf", "step": "", "note": "نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "de": "Eine kurze Aufgabe im Chat Deutsch Design Beruf bearbeiten.", "date": "2026-08-24", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-029", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-24", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-030", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-24", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-032", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-25", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-035", "title": "Deutsche Gedanken: Lesen", "step": "", "note": "اقرأ جزءًا واحدًا فقط من مقالاتك بالألماني في الشات المخصص.", "de": "Einen kurzen Abschnitt aus dem aktuellen Text lesen.", "date": "2026-08-25", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-033", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-25", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-034", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-25", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-036", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-26", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-039", "title": "Deutsch im Beruf", "step": "", "note": "نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "de": "Eine kurze Aufgabe im Chat Deutsch Design Beruf bearbeiten.", "date": "2026-08-26", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-037", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-26", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-038", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-26", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-040", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-27", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-043", "title": "Deutsche Gedanken: Lesen", "step": "", "note": "اقرأ جزءًا واحدًا فقط من مقالاتك بالألماني في الشات المخصص.", "de": "Einen kurzen Abschnitt aus dem aktuellen Text lesen.", "date": "2026-08-27", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-041", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-27", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-042", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-27", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-044", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-28", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-047", "title": "Deutsch im Beruf", "step": "", "note": "نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "de": "Eine kurze Aufgabe im Chat Deutsch Design Beruf bearbeiten.", "date": "2026-08-28", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-045", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-28", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-046", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-28", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-048", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-29", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-051", "title": "Deutsche Gedanken: Lesen", "step": "", "note": "اقرأ جزءًا واحدًا فقط من مقالاتك بالألماني في الشات المخصص.", "de": "Einen kurzen Abschnitt aus dem aktuellen Text lesen.", "date": "2026-08-29", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-049", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-29", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-050", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-29", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-052", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-30", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-055", "title": "Deutsch im Beruf", "step": "", "note": "نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "de": "Eine kurze Aufgabe im Chat Deutsch Design Beruf bearbeiten.", "date": "2026-08-30", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-053", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-30", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-054", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-30", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-056", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "date": "2026-08-31", "kind": "core", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-059", "title": "Deutsche Gedanken: Lesen", "step": "", "note": "اقرأ جزءًا واحدًا فقط من مقالاتك بالألماني في الشات المخصص.", "de": "Einen kurzen Abschnitt aus dem aktuellen Text lesen.", "date": "2026-08-31", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-057", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "date": "2026-08-31", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-058", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "date": "2026-08-31", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-061", "title": "Sprachcafé TU Dortmund", "step": "", "note": "لقاء محادثة ألماني. راجع صفحة TU Dortmund قبل الذهاب لأن المكان قد يتغير.", "de": "Deutsches Sprachcafé der TU Dortmund.", "date": "2026-09-03", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "smart-062", "title": "Sprachcafé TU Dortmund", "step": "", "note": "لقاء محادثة ألماني اختياري حسب ضغط الأسبوع.", "de": "Deutsches Sprachcafé im IBZ der TU Dortmund.", "date": "2026-09-17", "kind": "extra", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "corrected-35", "title": "Personal Brand", "step": "", "note": "ليس الآن.", "de": "Nicht jetzt.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-36", "title": "Toastmasters Essen", "step": "", "note": "تجربة مستقبلية.", "de": "Später testen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-34", "title": "telc Deutsch C1 Hochschule", "step": "", "note": "امتحان telc C1 Hochschule في ديسمبر 2026، مع محاولة احتياطية في يناير أو فبراير 2027.", "de": "Erste Prüfung im Dezember 2026; Reserve im Januar oder Februar 2027.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-30", "title": "الاشتراك في المكتبة", "step": "", "note": "يتحدد بعد مرحلة التسليم الحالية.", "de": "Nach der aktuellen Abgabephase einplanen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-32", "title": "التأمين: دفعتان × 300 €", "step": "", "note": "راجع مواعيد الدفعتين.", "de": "Zahlungsfristen prüfen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "corrected-31", "title": "دفع الجامعة: 350 €", "step": "", "note": "راجع موعد الدفع.", "de": "Zahlungsfrist prüfen.", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-11"}, {"id": "wait-1", "title": "Warten auf: PENTA Feedback", "step": "", "note": "في انتظار Feedback سفين وموعد التسليم الرسمي. عند وصوله يتحول تنفيذ PENTA إلى Must 1.", "de": "", "date": "", "kind": "waiting", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "wait-2", "title": "Warten auf: UDE / MIPsy", "step": "", "note": "في انتظار رد الجامعة وPrüfungsamt عن معادلة المواد وطريقة التقديم للماستر.", "de": "", "date": "", "kind": "waiting", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}, {"id": "wait-3", "title": "Warten auf: Steakschmiede", "step": "", "note": "في انتظار رد Steakschmiede بعد يوم التجربة.", "de": "", "date": "", "kind": "waiting", "status": "todo", "moved": 0, "spent": 0, "doneAt": "", "created": "2026-08-17"}], "templates": [{"id": "tpl1", "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "kind": "core"}, {"id": "tpl2", "title": "Deutsche Serie ansehen", "step": "", "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "de": "20 bis 30 Minuten auf Deutsch schauen.", "kind": "extra"}, {"id": "tpl3", "title": "Schnelles Denken, langsames Denken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "kind": "extra"}, {"id": "tpl4", "title": "Deutsche Gedanken: Lesen", "step": "", "note": "اقرأ جزءًا صغيرًا من مقالاتك بالألماني.", "de": "Einen kurzen Abschnitt lesen.", "kind": "extra"}, {"id": "tpl5", "title": "Deutsch im Beruf", "step": "", "note": "نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "de": "Eine kurze Aufgabe im Chat Deutsch Design Beruf bearbeiten.", "kind": "extra"}, {"id": "tpl6", "title": "Jobsuche", "step": "", "note": "راجع الرسائل المهمة والتقديمات الضرورية فقط.", "de": "Nur wichtige Nachrichten und Bewerbungen bearbeiten.", "kind": "extra"}, {"id": "tpl7", "title": "Deutsch B1+/B2", "step": "", "note": "جلسة ألماني عامة قصيرة أو متوسطة.", "de": "Kurze bis mittlere Lerneinheit.", "kind": "extra"}]};
+const SEED={"tasks": [{"created": "2026-08-11", "date": "", "de": "Brief lesen und Problem, Zielgruppe, Deliverables und offene Fragen notieren.", "doneAt": "2026-08-19", "id": "corrected-1", "kind": "inbox", "moved": 0, "note": "اقرأ البريف وحدد المشكلة والمستخدم والمطلوب والأسئلة المفتوحة.", "spent": 0, "status": "done", "step": "", "title": "PENTA: Re-Briefing analysieren"}, {"created": "2026-08-11", "date": "", "de": "Nur wichtige Nachrichten und Bewerbungen bearbeiten.", "doneAt": "2026-08-19", "id": "corrected-2", "kind": "inbox", "moved": 0, "note": "راجع الرسائل المهمة والتقديمات الضرورية فقط.", "spent": 0, "status": "done", "step": "", "title": "Jobsuche"}, {"created": "2026-08-11", "date": "", "de": "Gemeinsam schwimmen.", "doneAt": "2026-08-19", "id": "corrected-5", "kind": "inbox", "moved": 0, "note": "السباحة مع توبي وباستي.", "spent": 0, "status": "done", "step": "", "title": "Schwimmbad mit Tobi & Basti"}, {"created": "2026-08-11", "date": "", "de": "Einen kurzen Abschnitt lesen.", "doneAt": "2026-08-19", "id": "corrected-4", "kind": "inbox", "moved": 0, "note": "اقرأ جزءًا صغيرًا من مقالاتك بالألماني.", "spent": 0, "status": "done", "step": "", "title": "Deutsche Gedanken: Lesen"}, {"created": "2026-08-11", "date": "", "de": "Beitragsnummer vom Mitbewohner bekommen.", "doneAt": "2026-08-19", "id": "corrected-3", "kind": "inbox", "moved": 0, "note": "خد رقم الاشتراك من صاحبك في السكن لأنه بيدفع بالفعل.", "spent": 0, "status": "done", "step": "", "title": "Rundfunkbeitrag"}, {"created": "2026-08-11", "date": "", "de": "Erste vollständige Version schreiben.", "doneAt": "2026-08-19", "id": "corrected-6", "kind": "inbox", "moved": 0, "note": "اكتب المسودة الأولى الكاملة للـRe-Briefing.", "spent": 0, "status": "done", "step": "", "title": "PENTA: Re-Briefing schreiben"}, {"created": "2026-08-11", "date": "", "de": "Arbeitsabläufe, Zutaten, Geräte und wichtige Sätze lernen.", "doneAt": "2026-08-19", "id": "corrected-7", "kind": "inbox", "moved": 0, "note": "ذاكر طبيعة شغل المطعم والمكونات والأدوات والجمل المهمة.", "spent": 0, "status": "done", "step": "", "title": "Steakschmiede: Vorbereitung"}, {"created": "2026-08-11", "date": "", "de": "15 Minuten hören.", "doneAt": "2026-08-19", "id": "corrected-9", "kind": "inbox", "moved": 0, "note": "استماع 15 دقيقة فقط.", "spent": 0, "status": "done", "step": "", "title": "DW Hören"}, {"created": "2026-08-11", "date": "", "de": "Nachrichten prüfen und passende Bewerbungen senden.", "doneAt": "2026-08-19", "id": "corrected-8", "kind": "inbox", "moved": 0, "note": "راجع الرسائل وقدّم على فرص مناسبة.", "spent": 0, "status": "done", "step": "", "title": "Jobsuche"}, {"created": "2026-08-11", "date": "", "de": "Leichtes Krafttraining mit dem eigenen Körpergewicht.", "doneAt": "2026-08-19", "id": "corrected-10", "kind": "inbox", "moved": 0, "note": "تمارين سويدي خفيفة بوزن الجسم. دي رياضة، مش تدريب المطعم.", "spent": 0, "status": "done", "step": "", "title": "تمارين سويدي"}, {"created": "2026-08-11", "date": "", "de": "Struktur, Logik und Sprache prüfen. Versandfertig machen.", "doneAt": "2026-08-19", "id": "corrected-11", "kind": "inbox", "moved": 0, "note": "راجع الترتيب والمنطق واللغة وجهّز النسخة النهائية.", "spent": 0, "status": "done", "step": "", "title": "PENTA: Re-Briefing finalisieren"}, {"created": "2026-08-11", "date": "", "de": "Probetag in Bochum, etwa fünf bis sechs Stunden.", "doneAt": "2026-08-19", "id": "corrected-12", "kind": "inbox", "moved": 0, "note": "يوم التجربة في المطعم ببوخوم، تقريبًا من 5 إلى 6 ساعات.", "spent": 0, "status": "done", "step": "", "title": "Steakschmiede: Probetag"}, {"created": "2026-08-11", "date": "", "de": "Nur dringende Nachrichten prüfen.", "doneAt": "2026-08-19", "id": "corrected-14", "kind": "inbox", "moved": 0, "note": "راجع الرسائل العاجلة فقط.", "spent": 0, "status": "done", "step": "", "title": "Jobsuche: Nachrichten"}, {"created": "2026-08-11", "date": "", "de": "Kleidung, Weg, Essen und Wasser vorbereiten.", "doneAt": "2026-08-19", "id": "corrected-13", "kind": "inbox", "moved": 0, "note": "جهز الملابس والطريق والأكل والمياه.", "spent": 0, "status": "done", "step": "", "title": "Probetag vorbereiten"}, {"created": "2026-08-11", "date": "2026-08-14", "de": "Letzte Kontrolle und rechtzeitig senden.", "doneAt": "2026-08-14", "id": "corrected-15", "kind": "core", "moved": 0, "note": "اعمل مراجعة أخيرة وابعت الـRe-Briefing في وقت آمن.", "spent": 0, "status": "done", "step": "", "title": "PENTA: Re-Briefing senden"}, {"created": "2026-08-11", "date": "2026-08-14", "de": "Erfahrung und nächste Schritte kurz notieren.", "doneAt": "2026-08-14", "id": "corrected-16", "kind": "core", "moved": 0, "note": "سجل باختصار اللي حصل والخطوة التالية.", "spent": 0, "status": "done", "step": "", "title": "Steakschmiede: Probetag auswerten"}, {"created": "2026-08-11", "date": "", "de": "Kurze bis mittlere Lerneinheit.", "doneAt": "2026-08-19", "id": "corrected-18", "kind": "inbox", "moved": 0, "note": "جلسة ألماني عامة قصيرة أو متوسطة.", "spent": 0, "status": "done", "step": "", "title": "Deutsch B1+/B2"}, {"created": "2026-08-11", "date": "", "de": "Vollständiger Ruhetag.", "doneAt": "2026-08-19", "id": "corrected-20", "kind": "inbox", "moved": 0, "note": "إجازة كاملة من غير تعويض للمهام.", "spent": 0, "status": "done", "step": "", "title": "إجازة مع الأصدقاء"}, {"created": "2026-08-11", "date": "", "de": "Laptop, Internet, ruhigen Platz und Testbedingungen prüfen.", "doneAt": "", "id": "corrected-21", "kind": "inbox", "moved": 0, "note": "جهز اللابتوب والإنترنت والمكان الهادئ واقرأ تعليمات الاختبار.", "spent": 0, "status": "trash", "step": "", "title": "Telekom-Test: Vorbereitung"}, {"created": "2026-08-11", "date": "", "de": "Online-Test, ungefähr 90 Minuten. Uhrzeit bei Bedarf ändern.", "doneAt": "2026-08-19", "id": "corrected-22", "kind": "inbox", "moved": 0, "note": "اختبار أونلاين حوالي 90 دقيقة. عدّل الساعة لو اخترت وقتًا مختلفًا.", "spent": 0, "status": "done", "step": "", "title": "Telekom-Test"}, {"created": "2026-08-11", "date": "", "de": "Nur wenn nach dem Test Energie bleibt.", "doneAt": "2026-08-19", "id": "corrected-24", "kind": "inbox", "moved": 0, "note": "فقط لو لسه عندك طاقة بعد الاختبار.", "spent": 0, "status": "done", "step": "", "title": "Deutsch B1+/B2"}, {"created": "2026-08-11", "date": "", "de": "Offene Bewerbungen und Antworten prüfen.", "doneAt": "2026-08-19", "id": "corrected-23", "kind": "inbox", "moved": 0, "note": "راجع التقديمات والردود المفتوحة.", "spent": 0, "status": "done", "step": "", "title": "Jobsuche"}, {"created": "2026-08-11", "date": "", "de": "Svens Feedback lesen und Änderungen notieren. Danach die 14 Tage genau planen.", "doneAt": "2026-08-24", "id": "corrected-25", "kind": "waiting", "moved": 0, "note": "اقرأ Feedback سفين وسجل التعديلات، وبعدها نوزع فترة الـ14 يوم بدقة.", "spent": 0, "status": "done", "step": "", "title": "PENTA: Feedback prüfen"}, {"created": "2026-08-11", "date": "", "de": "Bewerbungen und offene Rückmeldungen bearbeiten.", "doneAt": "2026-08-19", "id": "corrected-26", "kind": "inbox", "moved": 0, "note": "اشتغل على التقديمات والردود المفتوحة.", "spent": 0, "status": "done", "step": "", "title": "Jobsuche"}, {"created": "2026-08-11", "date": "", "de": "Normale Lerneinheit im Deutsch-Chat.", "doneAt": "2026-08-19", "id": "corrected-27", "kind": "inbox", "moved": 0, "note": "جلسة عادية في شات الألماني العام.", "spent": 0, "status": "done", "step": "", "title": "Deutsch B1+/B2"}, {"created": "2026-08-17", "date": "", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "doneAt": "2026-08-19", "id": "smart-004", "kind": "inbox", "moved": 0, "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "spent": 0, "status": "done", "step": "", "title": "telc C1 Hochschule: Vorbereitung"}, {"created": "2026-08-17", "date": "", "de": "Eine kurze Aufgabe im Chat Deutsch Design Beruf bearbeiten.", "doneAt": "2026-08-19", "id": "smart-007", "kind": "inbox", "moved": 0, "note": "نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "spent": 0, "status": "done", "step": "", "title": "Deutsch im Beruf"}, {"created": "2026-08-17", "date": "", "de": "20 bis 30 Minuten auf Deutsch schauen.", "doneAt": "2026-08-19", "id": "smart-005", "kind": "inbox", "moved": 0, "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "spent": 0, "status": "done", "step": "", "title": "Deutsche Serie ansehen"}, {"created": "2026-08-17", "date": "", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "doneAt": "2026-08-19", "id": "smart-006", "kind": "inbox", "moved": 0, "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "spent": 0, "status": "done", "step": "", "title": "Schnelles Denken, langsames Denken: Lesen"}, {"created": "2026-08-17", "date": "", "de": "Online-Test nur durchführen, wenn genug Zeit und Energie vorhanden sind.", "doneAt": "", "id": "smart-063", "kind": "inbox", "moved": 0, "note": "اعمل اختبار تليكوم لو عندك وقت وطاقة. مش أساسي ومش مربوط بساعة.", "spent": 0, "status": "todo", "step": "", "title": "Telekom-Test"}, {"created": "2026-08-17", "date": "2026-08-19", "de": "Einen kurzen Abschnitt aus dem aktuellen Text lesen.", "doneAt": "2026-08-19", "id": "smart-011", "kind": "extra", "moved": 0, "note": "اقرأ جزءًا واحدًا فقط من مقالاتك بالألماني في الشات المخصص.", "spent": 288, "status": "done", "step": "", "title": "Deutsche Gedanken: Lesen"}, {"created": "2026-08-17", "date": "2026-08-19", "de": "20 bis 30 Minuten auf Deutsch schauen.", "doneAt": "2026-08-19", "id": "smart-009", "kind": "extra", "moved": 0, "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "spent": 0, "status": "done", "step": "", "title": "Deutsche Serie ansehen"}, {"created": "2026-08-17", "date": "2026-08-19", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "doneAt": "2026-08-19", "id": "smart-010", "kind": "extra", "moved": 0, "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "spent": 0, "status": "done", "step": "", "title": "Schnelles Denken, langsames Denken: Lesen"}, {"created": "2026-08-17", "date": "2026-08-20", "de": "Deutsches Sprachcafé im IBZ der TU Dortmund.", "doneAt": "", "id": "smart-060", "kind": "core", "moved": 0, "note": "لقاء محادثة ألماني في IBZ، Emil-Figge-Straße 59, 44227 Dortmund. اختياري ولا يحتاج تسجيلًا مسبقًا.", "spent": 0, "status": "trash", "step": "", "title": "Sprachcafé TU Dortmund"}, {"created": "2026-08-17", "date": "2026-08-22", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "doneAt": "2026-08-22", "id": "smart-022", "kind": "extra", "moved": 0, "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "spent": 0, "status": "done", "step": "", "title": "Schnelles Denken, langsames Denken: Lesen"}, {"created": "2026-08-17", "date": "2026-08-24", "de": "Eine kurze Aufgabe im Chat Deutsch Design Beruf bearbeiten.", "doneAt": "2026-08-24", "id": "smart-031", "kind": "extra", "moved": 0, "note": "نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "spent": 0, "status": "done", "step": "", "title": "Deutsch im Beruf"}, {"created": "2026-08-17", "date": "2026-08-24", "de": "20 bis 30 Minuten auf Deutsch schauen.", "doneAt": "2026-08-24", "id": "smart-029", "kind": "extra", "moved": 0, "note": "شاهد من 20 إلى 30 دقيقة بالألماني. ركّز على الفهم العام وسجّل 3 تعبيرات فقط.", "spent": 0, "status": "done", "step": "", "title": "Deutsche Serie ansehen"}, {"created": "2026-08-17", "date": "2026-08-24", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "doneAt": "2026-08-24", "id": "smart-030", "kind": "extra", "moved": 0, "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "spent": 0, "status": "done", "step": "اقرا جزء صغير", "title": "4000 اسبوع"}, {"created": "2026-08-17", "date": "2026-08-25", "de": "Einige Seiten lesen, ohne eine feste Seitenzahl.", "id": "smart-034", "kind": "extra", "moved": 0, "note": "اقرأ جزءًا صغيرًا من كتاب Thinking, Fast and Slow. عادة يومية خفيفة من غير عدد صفحات إجباري.", "spent": 0, "status": "trash", "step": "", "title": "كتاب 4000 اسبوع"}, {"created": "2026-08-17", "date": "2026-09-03", "de": "Deutsches Sprachcafé der TU Dortmund.", "doneAt": "", "id": "smart-061", "kind": "extra", "moved": 0, "note": "لقاء محادثة ألماني. راجع صفحة TU Dortmund قبل الذهاب لأن المكان قد يتغير.", "spent": 0, "status": "todo", "step": "", "title": "Sprachcafé TU Dortmund"}, {"created": "2026-08-17", "date": "2026-09-17", "de": "Deutsches Sprachcafé im IBZ der TU Dortmund.", "doneAt": "", "id": "smart-062", "kind": "extra", "moved": 0, "note": "لقاء محادثة ألماني اختياري حسب ضغط الأسبوع.", "spent": 0, "status": "todo", "step": "", "title": "Sprachcafé TU Dortmund"}, {"created": "2026-08-11", "date": "", "de": "Nicht jetzt.", "doneAt": "2026-08-19", "id": "corrected-35", "kind": "inbox", "moved": 0, "note": "ليس الآن.", "spent": 0, "status": "done", "step": "", "title": "Personal Brand"}, {"created": "2026-08-11", "date": "", "de": "Später testen.", "doneAt": "2026-08-19", "id": "corrected-36", "kind": "inbox", "moved": 0, "note": "تجربة مستقبلية.", "spent": 0, "status": "done", "step": "", "title": "Toastmasters Essen"}, {"created": "2026-08-11", "date": "", "de": "Erste Prüfung im Dezember 2026; Reserve im Januar oder Februar 2027.", "doneAt": "2026-08-19", "id": "corrected-34", "kind": "inbox", "moved": 0, "note": "امتحان telc C1 Hochschule في ديسمبر 2026، مع محاولة احتياطية في يناير أو فبراير 2027.", "spent": 0, "status": "done", "step": "", "title": "telc Deutsch C1 Hochschule"}, {"created": "2026-08-11", "date": "", "de": "Nach der aktuellen Abgabephase einplanen.", "doneAt": "", "id": "corrected-30", "kind": "inbox", "moved": 0, "note": "يتحدد بعد مرحلة التسليم الحالية.", "spent": 0, "status": "todo", "step": "", "title": "الاشتراك في المكتبة"}, {"created": "2026-08-11", "date": "", "de": "Zahlungsfristen prüfen.", "doneAt": "2026-08-19", "id": "corrected-32", "kind": "inbox", "moved": 0, "note": "راجع مواعيد الدفعتين.", "spent": 0, "status": "done", "step": "", "title": "التأمين: دفعتان × 300 €"}, {"created": "2026-08-11", "date": "", "de": "Zahlungsfrist prüfen.", "doneAt": "2026-08-19", "id": "corrected-31", "kind": "inbox", "moved": 0, "note": "راجع موعد الدفع.", "spent": 0, "status": "done", "step": "", "title": "دفع الجامعة: 350 €"}, {"created": "2026-08-17", "date": "", "de": "", "doneAt": "2026-08-24", "id": "wait-1", "kind": "waiting", "moved": 0, "note": "في انتظار Feedback سفين وموعد التسليم الرسمي. عند وصوله يتحول تنفيذ PENTA إلى Must 1.", "spent": 0, "status": "done", "step": "", "title": "Warten auf: PENTA Feedback"}, {"created": "2026-08-17", "date": "", "de": "", "doneAt": "", "id": "wait-2", "kind": "waiting", "moved": 0, "note": "في انتظار رد الجامعة وPrüfungsamt عن معادلة المواد وطريقة التقديم للماستر.", "spent": 0, "status": "todo", "step": "", "title": "Warten auf: UDE / MIPsy"}, {"created": "2026-08-17", "date": "", "de": "", "doneAt": "2026-08-24", "id": "wait-3", "kind": "waiting", "moved": 0, "note": "في انتظار رد Steakschmiede بعد يوم التجربة.", "spent": 0, "status": "done", "step": "", "title": "Warten auf: Steakschmiede"}, {"created": "2026-08-19", "date": "2026-08-19", "de": "", "doneAt": "2026-08-19", "id": "mt0kiyntn1l", "kind": "core", "moved": 0, "note": "اشتغل على سيناريو شاشة الأوفرفيو من الصفر بالمنهجية المعتادة: حقيقة من البريف، استنتاجك، قرار التصميم، افتراض، سؤال.", "spent": 11, "status": "done", "step": "Briefing-Abschnitt zu Übersicht lesen", "title": "PENTA: Szenario Bildschirm 1"}, {"created": "2026-08-19", "date": "2026-08-20", "de": "", "id": "mt0kiynttmr", "kind": "extra", "moved": 0, "note": "ارسم شاشة الأوفرفيو Mid-Fidelity. وظيفة أساسية واحدة للشاشة، من غير High-Fidelity مبالغ فيه.", "spent": 0, "status": "trash", "step": "Leeres Frame in Figma öffnen", "title": "PENTA: Bildschirm 1 gestalten"}, {"created": "2026-08-19", "date": "2026-08-21", "de": "", "id": "mt0kiyntjuv", "kind": "core", "moved": 0, "note": "سيناريو شاشة التخطيط بنفس المنهجية. كل قرار لازم يرجع لأندريا أو لنطاق المنتج.", "spent": 0, "status": "todo", "step": "Notizen zu Planung durchgehen", "title": "PENTA: Szenario Bildschirm 2"}, {"created": "2026-08-19", "date": "2026-08-22", "de": "", "doneAt": "2026-08-22", "id": "mt0kiyntjrz", "kind": "core", "moved": 0, "note": "ارسم شاشة التخطيط. خلي الستايل زي شاشة 1 و3 بالظبط.", "spent": 0, "status": "done", "step": "Frame von Bildschirm 1 duplizieren", "title": "PENTA: Bildschirm 2 gestalten"}, {"created": "2026-08-19", "date": "2026-08-23", "de": "", "doneAt": "2026-08-23", "id": "mt0kiyntkc4", "kind": "core", "moved": 0, "note": "اختار خمسة من العشرة اللي كاتبهم. الأسئلة اللي جت من الشغل الحقيقي هي الأقوى.", "spent": 0, "status": "done", "step": "Die zehn Fragen laut vorlesen", "title": "PENTA: Fünf Fragen wählen"}, {"created": "2026-08-19", "date": "2026-08-24", "de": "", "id": "mt0kiynt97f", "kind": "core", "moved": 0, "note": "جمّع الخمس صفحات: Teil 2، شاشة 1، شاشة 2، شاشة 3، الأسئلة وملاحظة الذكاء الاصطناعي.", "spent": 0, "status": "todo", "step": "Seite 1 anlegen", "title": "PENTA: PDF bauen"}, {"created": "2026-08-19", "date": "2026-08-25", "de": "", "id": "mt0kiyntoeu", "kind": "core", "moved": 0, "note": "مراجعة أخيرة وإرسال لسفين. ابعت في وقت آمن، مش آخر لحظة.", "spent": 0, "status": "todo", "step": "PDF ein letztes Mal öffnen", "title": "PENTA: Abgabe senden"}, {"created": "2026-08-19", "date": "2026-08-19", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "doneAt": "2026-08-19", "id": "mt0krp5yxre", "kind": "core", "moved": 0, "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "spent": 3, "status": "done", "step": "", "title": "telc C1 Hochschule: Vorbereitung"}, {"created": "2026-08-19", "date": "2026-08-20", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "id": "mt0ledyiiqr", "kind": "core", "moved": 0, "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "spent": 0, "status": "trash", "step": "", "title": "telc C1 Hochschule: Vorbereitung"}, {"created": "2026-08-19", "date": "2026-08-20", "de": "", "doneAt": "2026-08-20", "id": "mt0lql0ewzs", "kind": "core", "moved": 0, "note": "", "spent": 7, "status": "done", "step": "", "title": "PENTA: Szenario Bildschirm 2"}, {"created": "2026-08-20", "date": "2026-08-20", "de": "", "id": "mt0mz9e55io", "kind": "core", "moved": 0, "note": "", "status": "trash", "step": "يوم جميل اتعرف علي ناس جديدة و اكسر خوفك و افتح مواضيع", "title": "Sprachcafe TU Dortmund"}, {"created": "2026-08-19", "date": "2026-08-20", "de": "", "doneAt": "2026-08-20", "id": "mt0s0jgk4fc", "kind": "core", "moved": 0, "note": "", "status": "done", "step": "", "title": "Kino - Spiderman - 20 Uhr"}, {"created": "2026-08-23", "date": "2026-08-23", "de": "", "id": "mt58ym598dc", "kind": "extra", "moved": 0, "note": "", "spent": 0, "status": "todo", "step": "", "title": "قسمها دواير و اسرار"}, {"created": "2026-08-23", "date": "2026-08-26", "de": "", "id": "mt627ztclak", "kind": "extra", "moved": 1, "note": "", "spent": 0, "status": "todo", "step": "", "title": "الجامعة"}, {"created": "2026-08-24", "date": "", "de": "", "id": "mt7v5c6x4zi", "kind": "inbox", "moved": 0, "note": "", "status": "trash", "step": "", "title": "Viertausend Wochen: Lesen"}, {"created": "2026-08-24", "date": "", "de": "", "id": "mt7v5paiiqg", "kind": "inbox", "moved": 0, "note": "", "spent": 0, "status": "trash", "step": "", "title": "Viertausend Wochen: Lesen"}, {"created": "2026-08-24", "date": "2026-08-25", "de": "", "id": "mt7v6lc8np7", "kind": "extra", "moved": 0, "note": "", "status": "todo", "step": "فراغ + مواصلات - اقرأ جزءًا صغيرًا من كتاب «أربعة آلاف أسبوع» من غير عدد صفحات إلزامي.", "title": "Viertausend Wochen: Lesen"}, {"created": "2026-08-24", "date": "2026-08-25", "de": "Eine kurze Aufgabe im Chat Deutsch Design Beruf bearbeiten.", "id": "mt7v7ehi0xe", "kind": "extra", "moved": 0, "note": "نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "spent": 0, "status": "todo", "step": "في المواصلات - نفّذ مهمة قصيرة واحدة من شات ألماني التخصص للتصميم.", "title": "Deutsch im Beruf"}, {"created": "2026-08-24", "date": "2026-08-25", "de": "Einen kurzen Abschnitt lesen.", "id": "mt7v7ix8z0u", "kind": "extra", "moved": 0, "note": "اقرأ جزءًا صغيرًا من مقالاتك بالألماني.", "spent": 0, "status": "todo", "step": "في مواصلات - اقرأ جزءًا صغيرًا من مقالاتك بالألماني.", "title": "Deutsche Gedanken: Lesen"}, {"created": "2026-08-24", "date": "2026-08-25", "de": "", "id": "mt7v827hac0", "kind": "extra", "moved": 0, "note": "", "status": "todo", "step": "في البيت - استمع إلى مقطع ألماني من YouTube، وبعدها قلّد جزءًا قصيرًا منه بصوت مسموع.", "title": "Deutsch hören und Shadowing üben"}, {"created": "2026-08-24", "date": "2026-08-25", "de": "", "id": "mt7vbpppb42", "kind": "extra", "moved": 0, "note": "", "spent": 0, "status": "trash", "step": "اقرأ جزءًا صغيرًا من كتاب «أربعة آلاف أسبوع» من غير عدد صفحات إلزامي.", "title": "Viertausend Wochen: Lesen"}, {"created": "2026-08-24", "date": "2026-08-26", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "id": "mt7ve616al5", "kind": "core", "moved": 0, "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "spent": 0, "status": "todo", "step": "", "title": "telc C1 Hochschule: Vorbereitung"}, {"created": "2026-08-24", "date": "2026-08-26", "de": "", "id": "mt7vepfoy1v", "kind": "extra", "moved": 0, "note": "", "spent": 0, "status": "trash", "step": "في البيت - استمع إلى مقطع ألماني من YouTube، وبعدها قلّد جزءًا قصيرًا منه بصوت مسموع.", "title": "Deutsch hören und Shadowing üben"}, {"created": "2026-08-24", "date": "2026-08-25", "de": "", "id": "mt7vguwno5q", "kind": "core", "moved": 0, "note": "", "status": "todo", "step": "اسالة الماجستير - 10 لي 12 في الجامعة", "title": "UDE / MIPsy"}, {"created": "2026-08-25", "date": "2026-08-25", "de": "", "id": "mt8npslmisi", "kind": "extra", "moved": 0, "note": "", "status": "todo", "step": "", "title": "قراءة القراءن"}, {"id": "master-check", "title": "الماجستير: التأكد من الملاءمة والأوراق", "step": "", "note": "مراجعة إن التخصص مناسب، وتحديد لو في أوراق أو متطلبات ناقصة.", "de": "", "date": "", "kind": "inbox", "status": "todo", "moved": 0, "spent": 0, "created": "2026-08-25", "doneAt": ""}], "nextPhases": [], "templates": [{"id": "tpl1", "order": 0, "title": "telc C1 Hochschule: Vorbereitung", "step": "", "note": "نفّذ المهمة الحالية في شات اللغة. دي المهمة الأساسية اليومية: سد فجوات B2، بناء C1، والتدريب على الامتحان.", "de": "Die aktuelle Aufgabe im telc-Chat bearbeiten.", "kind": "core", "tracked": false, "context": ""}, {"id": "tpl2", "order": 1, "title": "Jobsuche", "step": "", "note": "خطوة واحدة مفيدة: رسالة أو تقديم أو متابعة.", "de": "Eine sinnvolle Bewerbungshandlung.", "kind": "extra", "tracked": false, "context": "أونلاين"}, {"id": "tpl3", "order": 2, "title": "أربعة آلاف أسبوع", "step": "", "note": "اقرأ جزءًا صغيرًا بلا عدد صفحات إلزامي.", "de": "Einen kurzen Abschnitt lesen.", "kind": "extra", "tracked": false, "context": "برا"}, {"id": "tpl4", "order": 3, "title": "Der Fluch des Warum", "step": "", "note": "اقرأ جزءًا واحدًا من مقالاتك بالألماني.", "de": "Einen kurzen Abschnitt auf Deutsch lesen.", "kind": "extra", "tracked": false, "context": "برا"}, {"id": "tpl5", "order": 4, "title": "UX Design Sprache", "step": "", "note": "اقرأ وراجع الجمل الألمانية الخاصة بالتصميم.", "de": "Deutsche Sätze aus dem Designbereich lesen.", "kind": "extra", "tracked": false, "context": "برا"}, {"id": "tpl6", "order": 5, "title": "استماع + Shadowing", "step": "في البيت - استمع إلى مقطع ألماني من YouTube، وبعدها قلّد جزءًا قصيرًا منه بصوت مسموع.", "note": "استمع لمقطع ألماني وقلّد جزءًا قصيرًا بصوت مسموع.", "de": "Ein Video hören und einen kurzen Teil nachsprechen.", "kind": "extra", "tracked": false, "context": "البيت"}]};
 let S=load(), view=today(), timer=null, tSec=0, tId=null;
 
 function today(){const d=new Date();d.setHours(d.getHours()-DAY_START);return iso(d)}
@@ -159,7 +170,7 @@ function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'
 function parse(s){const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2])}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&x.tasks){if(!x.templates)x.templates=SEED.templates;return x}}catch(e){}return JSON.parse(JSON.stringify(SEED))}
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&x.tasks){if(!x.templates)x.templates=SEED.templates;x.templates.forEach((t,i)=>{if(t.tracked===undefined)t.tracked=false;if(t.order===undefined)t.order=i});if(!x.nextPhases)x.nextPhases=[];return x}}catch(e){}return JSON.parse(JSON.stringify(SEED))}
 let _lastSave=0;
 function save(){
   _lastSave=Date.now();
@@ -174,6 +185,7 @@ function core(d){return ofDay(d,'core')}
 function extra(d){return ofDay(d,'extra')}
 function inbox(){return S.tasks.filter(t=>t.kind==='inbox'&&t.status!=='trash'&&t.status!=='done')}
 function waiting(){return S.tasks.filter(t=>t.kind==='waiting'&&t.status!=='trash'&&t.status!=='done')}
+function pinnedWaiting(){return waiting().find(t=>t.pinned)||null}
 function current(){return core(view).find(t=>t.status!=='done')||extra(view).find(t=>t.status!=='done')||null}
 
 function go(n,el){
@@ -184,11 +196,11 @@ function go(n,el){
   window.scrollTo(0,0);
 }
 
-function render(){renderToday();renderBox();renderWeek();renderLog()}
+function render(){renderToday();renderBox();renderWeek();renderLog();renderProgress()}
 
 function clock(){const m=String(Math.floor(tSec/60)).padStart(2,'0'),s=String(tSec%60).padStart(2,'0');return m+':'+s}
 
-function renderToday(){
+function renderTodayBase(){
   const d=parse(view), t=current(), c=core(view), e=extra(view);
   const left=c.filter(x=>x.status!=='done').length;
   let now;
@@ -211,6 +223,14 @@ function renderToday(){
       '<div class="muted">لو عايز تضيف مهمة لليوم، اضغط الزرار الأخضر تحت.</div></div>';
   }
 
+  const pw=pinnedWaiting();
+  const pinBlock=pw?'<div class="card" style="margin-top:0"><div class="head"><h2>مستني رد</h2></div>'+
+    '<div class="itemTitle">'+esc(pw.title)+'</div>'+
+    (pw.note?'<div class="itemSub">'+esc(pw.note)+'</div>':'')+
+    '<div class="row" style="margin-top:12px">'+
+      '<button class="b main" onclick="waitReceived(\''+pw.id+'\')">استلمتها</button>'+
+      '<button class="b" onclick="waitToTask(\''+pw.id+'\')">حوّلها لمهمة</button>'+
+    '</div></div>':'';
   const isToday=view===today();
   const nav='<div class="dayNav">'+
     '<button class="navArrow" onclick="jump(\''+shiftDay(view,-1)+'\')" aria-label="اليوم اللي فات">‹</button>'+
@@ -219,7 +239,7 @@ function renderToday(){
     '</div>'+
     '<button class="navArrow" onclick="jump(\''+shiftDay(view,1)+'\')" aria-label="اليوم اللي بعده">›</button>'+
   '</div>';
-  let s=nav+now;
+  let s=pinBlock+nav+now;
   s+='<div class="card"><div class="head"><h2>الأساسي</h2><span class="muted">'+left+' من '+c.length+'</span></div>';
   s+= c.length? c.map(row).join('') : '<div class="empty">مفيش مهام أساسية النهارده.</div>';
   if(c.length<2) s+='<div style="margin-top:12px"><button class="b small" onclick="add(\'core\')">+ مهمة أساسية</button></div>';
@@ -242,13 +262,12 @@ function row(t){
     '</div><button class="dots" onclick="menu(\''+t.id+'\')" aria-label="خيارات">···</button></div>';
 }
 
-function renderBox(){
+function renderBoxBase(){
   const i=inbox(), w=waiting();
-  const tpls=S.templates||[];
+  const tpls=sortedTemplates();
   let s='<div class="card"><div class="head"><h2>المتكرر</h2><span class="muted">'+tpls.length+'</span></div>'+
     '<div class="muted" style="margin-bottom:8px">اضغط على أي واحدة عشان تضيفها ليوم.</div>'+
-    (tpls.length?'<div class="chips">'+tpls.map(t=>'<button class="chip" onclick="useTemplate(\''+t.id+'\')">'+esc(t.title)+'</button>').join('')+'</div>'
-               :'<div class="empty">مفيش قوالب.</div>')+
+    (tpls.length?chipsHTML(tpls,'useTemplate'):'<div class="empty">مفيش قوالب.</div>')+
     '<div style="margin-top:14px"><button class="b small" onclick="editTemplates()">تعديل القوالب</button></div></div>';
 
   const q=(window._boxQ||'').trim();
@@ -262,6 +281,17 @@ function renderBox(){
     '<div class="muted" style="margin-bottom:8px">حاجات مش في إيدك. مش مهام.</div>';
   s+= w.length? w.map(row).join('') : '<div class="empty">مفيش حاجة مستنيها.</div>';
   s+='<div style="margin-top:12px"><button class="b small" onclick="add(\'waiting\')">+ حاجة مستني ردها</button></div></div>';
+  const phases=S.nextPhases||[];
+  s+='<div class="card"><div class="head"><h2>المرحلة الجاية</h2></div>'+
+    '<div class="muted" style="margin-bottom:8px">اللي بعد الأساسي الحالي، بالترتيب.</div>'+
+    (phases.length?'<div id="phaseList">'+phases.map((p,i)=>
+      '<div class="tplRow" data-idx="'+i+'" style="display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--line);background:var(--card)">'+
+        '<span class="dragHandle" style="touch-action:none;cursor:grab;color:var(--soft);font-size:18px;padding:2px 4px" onpointerdown="phaseDragStart(event,'+i+')">⋮⋮</span>'+
+        '<span style="flex:1;font-size:15px">'+(i===0?'▶ ':'')+esc(p)+'</span>'+
+        '<button class="dots" onclick="delPhase('+i+')" aria-label="احذف">×</button>'+
+      '</div>').join('')+'</div>'
+     :'<div class="empty">مفيش مراحل جاية.</div>')+
+    '<div style="margin-top:12px"><button class="b small" onclick="addPhase()">+ مرحلة جاية</button></div></div>';
   s+='<div class="card"><h2>لصق من الشات</h2>'+
     '<div class="muted" style="margin-bottom:8px">الصق مهمة أو مجموعة مهام. بتتضاف فوق اللي موجود، ومش بتمسح حاجة.</div>'+
     '<textarea id="pasteBox" placeholder="سطر لكل مهمة، أو كود JSON من الشات"></textarea>'+
@@ -399,6 +429,8 @@ function menu(id){
                         '<button class="b" onclick="toToday(\''+id+'\',\'extra\')">خليها إضافة خفيفة</button>'+
                         '<button class="b" onclick="mark(\''+id+'\',\'waiting\')">دي مستني فيها رد</button>';
   else if(t.kind==='waiting') b='<button class="b main" onclick="mark(\''+id+'\',\'done\')">وصل الرد</button>'+
+                        (t.pinned?'<button class="b" onclick="unpinWait(\''+id+'\')">شيلها من فوق</button>'
+                                 :'<button class="b" onclick="pinWait(\''+id+'\')">ثبّتها فوق</button>')+
                         '<button class="b" onclick="toToday(\''+id+'\',\'core\')">حوّلها لمهمة النهارده</button>';
   else b='<button class="b" onclick="close_();editor(find(\''+id+'\'),\'تعديل\')">تعديل</button>'+
          '<button class="b" onclick="pushDay(\''+id+'\')">أجّلها لبكرة</button>'+
@@ -420,6 +452,56 @@ function mark(id,v){
 
 function open_(html){document.getElementById('sheet').innerHTML=html;document.getElementById('sheetWrap').classList.add('on')}
 function close_(){document.getElementById('sheetWrap').classList.remove('on')}
+
+function addPhase(){
+  open_('<h3>مرحلة جاية</h3><label for="pname">الاسم</label><input id="pname" placeholder="مثلاً: بحث الماجستير">'+
+    '<div class="stack"><button class="b main" onclick="savePhase()">أضف</button>'+
+    '<button class="b quiet" onclick="close_()">إلغاء</button></div>');
+}
+function savePhase(){
+  const v=document.getElementById('pname').value.trim();
+  if(!v)return say('اكتب اسم المرحلة');
+  if(!S.nextPhases)S.nextPhases=[];
+  S.nextPhases.push(v);
+  save();close_();render();
+}
+function delPhase(i){
+  S.nextPhases.splice(i,1);
+  save();render();
+}
+function phaseDragStart(e,idx){
+  e.preventDefault();
+  const list=document.getElementById('phaseList'); if(!list)return;
+  const rows=[...list.querySelectorAll('.tplRow')];
+  window._pDragIdx=idx;
+  window._pDragStartY=e.clientY;
+  window._pDragRowH=rows[0]?rows[0].getBoundingClientRect().height:44;
+  const row=rows[idx];
+  if(row){row.style.position='relative';row.style.zIndex='5';row.style.boxShadow='0 4px 14px rgba(32,38,43,.18)';row.style.borderRadius='10px'}
+  document.addEventListener('pointermove',phaseDragMove);
+  document.addEventListener('pointerup',phaseDragEnd);
+}
+function phaseDragMove(e){
+  if(window._pDragIdx===undefined||window._pDragIdx===null)return;
+  const list=document.getElementById('phaseList'); if(!list)return;
+  const row=list.querySelectorAll('.tplRow')[window._pDragIdx];
+  if(row)row.style.transform='translateY('+(e.clientY-window._pDragStartY)+'px)';
+}
+function phaseDragEnd(e){
+  document.removeEventListener('pointermove',phaseDragMove);
+  document.removeEventListener('pointerup',phaseDragEnd);
+  if(window._pDragIdx===undefined||window._pDragIdx===null)return;
+  const dy=e.clientY-window._pDragStartY;
+  const steps=Math.round(dy/(window._pDragRowH||44));
+  const arr=S.nextPhases;
+  const fromIdx=window._pDragIdx;
+  const newIdx=Math.max(0,Math.min(arr.length-1,fromIdx+steps));
+  const[moved]=arr.splice(fromIdx,1);
+  arr.splice(newIdx,0,moved);
+  save();
+  window._pDragIdx=null;
+  render();
+}
 
 function pasteAdd(){
   const el=document.getElementById('pasteBox');
@@ -459,11 +541,33 @@ function dayLabel(d){
   const x=parse(d); return DAYS[x.getDay()]+' '+x.getDate()+' '+MON[x.getMonth()];
 }
 
+function sortedTemplates(){return (S.templates||[]).slice().sort((a,b)=>(a.order||0)-(b.order||0))}
+function groupByContext(tpls){
+  const order=['برا','البيت','أونلاين',''];
+  const g={};order.forEach(k=>g[k]=[]);
+  tpls.forEach(t=>{const k=order.includes(t.context)?t.context:'';g[k].push(t)});
+  return order.filter(k=>g[k].length).map(k=>({label:k||'عام',items:g[k]}));
+}
+function chipsHTML(tpls,onclickFn){
+  return groupByContext(tpls).map(grp=>
+    '<div class="ctxLabel">'+esc(grp.label)+'</div><div class="chips">'+
+      grp.items.map(t=>'<button class="chip" onclick="'+onclickFn+'(\''+t.id+'\')">'+esc(t.title)+'</button>').join('')+
+    '</div>'
+  ).join('');
+}
+
+function chipsForDate(tpls,date){
+  return groupByContext(tpls).map(grp=>
+    '<div class="ctxLabel">'+esc(grp.label)+'</div><div class="chips">'+
+      grp.items.map(t=>'<button class="chip" onclick="applyTemplate(\''+t.id+'\',\''+date+'\')">'+esc(t.title)+'</button>').join('')+
+    '</div>'
+  ).join('');
+}
+
 function pickTemplate(date){
-  const tpls=S.templates||[];
+  const tpls=sortedTemplates();
   open_('<h3>أضف لـ '+dayLabel(date)+'</h3>'+
-    (tpls.length?'<div class="muted">من المتكرر</div><div class="chips">'+
-      tpls.map(t=>'<button class="chip" onclick="applyTemplate(\''+t.id+'\',\''+date+'\')">'+esc(t.title)+'</button>').join('')+'</div>':'')+
+    (tpls.length?'<div class="muted" style="margin-bottom:6px">من المتكرر</div>'+chipsForDate(tpls,date):'')+
     '<div class="stack"><button class="b main" onclick="close_();addOnDay(\''+date+'\')">مهمة جديدة</button>'+
     '<button class="b quiet" onclick="close_()">إلغاء</button></div>');
 }
@@ -481,20 +585,35 @@ function useTemplate(id){
 }
 
 function templateDate(id){
-  open_('<h3>اختار اليوم</h3><label for="tdate">التاريخ</label>'+
+  open_('<h3>اختار الفترة</h3><label for="tdate">من</label>'+
     '<input id="tdate" type="date" value="'+today()+'">'+
-    '<div class="stack"><button class="b main" onclick="applyTemplate(\''+id+'\',document.getElementById(\'tdate\').value)">أضف</button>'+
+    '<label for="tdate2">لغاية (اختياري — سيبه فاضي ليوم واحد)</label>'+
+    '<input id="tdate2" type="date">'+
+    '<div class="stack"><button class="b main" onclick="applyTemplateRange(\''+id+'\',document.getElementById(\'tdate\').value,document.getElementById(\'tdate2\').value)">أضف</button>'+
     '<button class="b quiet" onclick="close_()">إلغاء</button></div>');
 }
 
-function applyTemplate(id,date){
-  const t=(S.templates||[]).find(x=>x.id===id); if(!t||!date)return;
+function addTemplateOccurrence(t,date){
   let kind=t.kind||'extra';
   if(kind==='core'&&core(date).length>=2)kind='extra';
   S.tasks.push({id:uid(),title:t.title,step:t.step||'',note:t.note||'',de:t.de||'',
-    date:date,kind:kind,status:'todo',moved:0,spent:0,created:today()});
+    date:date,kind:kind,status:'todo',moved:0,spent:0,created:today(),context:t.context||''});
+  return kind;
+}
+function applyTemplate(id,date){
+  const t=(S.templates||[]).find(x=>x.id===id); if(!t||!date)return;
+  const kind=addTemplateOccurrence(t,date);
   save();close_();render();
   say(t.title+' → '+dayLabel(date)+(kind==='extra'&&t.kind==='core'?' (إضافي)':''));
+}
+function applyTemplateRange(id,startDate,endDate){
+  const t=(S.templates||[]).find(x=>x.id===id); if(!t||!startDate)return;
+  let end=endDate||startDate;
+  if(end<startDate){const tmp=startDate;startDate=end;end=tmp}
+  let d=startDate,n=0;
+  while(d<=end&&n<60){addTemplateOccurrence(t,d);d=shiftDay(d,1);n++}
+  save();close_();render();
+  say(n<=1?(t.title+' → '+dayLabel(startDate)):('اتضافت لـ '+n+' يوم، من '+dayLabel(startDate)+'.'));
 }
 
 function addOnDay(date){
@@ -508,17 +627,80 @@ function saveAsTemplate(id){
   if(!S.templates)S.templates=[];
   if(S.templates.some(x=>x.title===t.title)){close_();return say('موجودة في المتكرر خلاص.')}
   S.templates.push({id:'tpl'+uid(),title:t.title,step:t.step||'',note:t.note||'',de:t.de||'',
-    kind:t.kind==='core'?'core':'extra'});
+    kind:t.kind==='core'?'core':'extra',tracked:false,context:t.context||''});
   save();close_();render();say('اتحفظت في المتكرر.');
 }
 
 function editTemplates(){
-  const tpls=S.templates||[];
+  const tpls=sortedTemplates();
   open_('<h3>القوالب المتكررة</h3>'+
-    (tpls.length?'<div class="stack">'+tpls.map(t=>
-      '<button class="b" onclick="delTemplate(\''+t.id+'\')">'+esc(t.title)+' — احذف</button>').join('')+'</div>'
+    (tpls.length?'<div class="muted" style="margin-bottom:8px">اضغط مطولًا على المقبض واسحب لترتيب.</div><div id="tplList">'+tpls.map(t=>
+      '<div class="tplRow" data-id="'+t.id+'" style="display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-top:1px solid var(--line);background:var(--card)">'+
+        '<span class="dragHandle" style="touch-action:none;cursor:grab;color:var(--soft);font-size:18px;padding:2px 4px;line-height:1.5" onpointerdown="tplDragStart(event,\''+t.id+'\')">⋮⋮</span>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div class="row" style="justify-content:space-between;align-items:center">'+
+            '<span style="font-size:15px">'+esc(t.title)+'</span>'+
+            '<span class="row" style="gap:6px">'+
+              '<button class="b small'+(t.tracked?' main':'')+'" onclick="toggleTrack(\''+t.id+'\')">'+(t.tracked?'بتتابعها ✓':'تابعها')+'</button>'+
+              '<button class="b small" onclick="delTemplate(\''+t.id+'\')">احذف</button>'+
+            '</span></div>'+
+          '<div class="muted" style="margin-top:4px">السياق: '+(t.context||'عام')+
+            ' — <a href="#" onclick="event.preventDefault();setContext(\''+t.id+'\')" style="color:var(--accent)">غيّر</a></div>'+
+        '</div>'+
+      '</div>').join('')+'</div>'
      :'<div class="muted">مفيش قوالب. من قايمة أي مهمة اختار «احفظها في المتكرر».</div>')+
     '<div class="stack"><button class="b quiet" onclick="close_()">تمام</button></div>');
+}
+
+function tplDragStart(e,id){
+  e.preventDefault();
+  const list=document.getElementById('tplList'); if(!list)return;
+  const rows=[...list.querySelectorAll('.tplRow')];
+  window._dragId=id;
+  window._dragStartY=e.clientY;
+  window._dragRowH=rows[0]?rows[0].getBoundingClientRect().height:44;
+  window._dragCount=rows.length;
+  const row=rows.find(r=>r.dataset.id===id);
+  if(row){row.style.position='relative';row.style.zIndex='5';row.style.boxShadow='0 4px 14px rgba(32,38,43,.18)';row.style.borderRadius='10px'}
+  document.addEventListener('pointermove',tplDragMove);
+  document.addEventListener('pointerup',tplDragEnd);
+}
+function tplDragMove(e){
+  if(!window._dragId)return;
+  const list=document.getElementById('tplList'); if(!list)return;
+  const row=list.querySelector('.tplRow[data-id="'+window._dragId+'"]');
+  if(row)row.style.transform='translateY('+(e.clientY-window._dragStartY)+'px)';
+}
+function tplDragEnd(e){
+  document.removeEventListener('pointermove',tplDragMove);
+  document.removeEventListener('pointerup',tplDragEnd);
+  if(!window._dragId)return;
+  const dy=e.clientY-window._dragStartY;
+  const steps=Math.round(dy/(window._dragRowH||44));
+  const arr=S.templates;
+  const fromIdx=arr.findIndex(t=>t.id===window._dragId);
+  if(fromIdx>-1){
+    const newIdx=Math.max(0,Math.min(arr.length-1,fromIdx+steps));
+    const[moved]=arr.splice(fromIdx,1);
+    arr.splice(newIdx,0,moved);
+    arr.forEach((t,i)=>t.order=i);
+    save();
+  }
+  window._dragId=null;
+  editTemplates();render();
+}
+function setContext(id){
+  const t=(S.templates||[]).find(x=>x.id===id); if(!t)return;
+  open_('<h3>سياق '+esc(t.title)+'</h3>'+
+    '<div class="stack">'+
+      ['برا','البيت','أونلاين','عام'].map(c=>
+        '<button class="b'+((t.context||'عام')===c?' main':'')+'" onclick="applyContext(\''+id+'\',\''+c+'\')">'+c+'</button>').join('')+
+    '</div>');
+}
+function applyContext(id,c){
+  const t=(S.templates||[]).find(x=>x.id===id); if(!t)return;
+  t.context=(c==='عام')?'':c;
+  save();editTemplates();render();
 }
 
 function delTemplate(id){
@@ -547,6 +729,57 @@ function saveSync(){
   localStorage.setItem(FB_KEY,JSON.stringify(cfg));
   close_();say('اتحفظت. التطبيق هيفتح تاني.');
   setTimeout(()=>location.reload(),900);
+}
+
+function waitReceived(id){
+  const t=find(id); if(!t)return;
+  t.status='done'; t.doneAt=today(); t.pinned=false;
+  save(); render(); say('اتقفلت.');
+}
+function waitToTask(id){
+  const t=find(id); if(!t)return;
+  t.pinned=false; close_();
+  editor({id:t.id,title:t.title,step:'',date:view,kind:'core',status:'todo',moved:0},'حوّلها لمهمة');
+}
+function pinWait(id){
+  waiting().forEach(t=>t.pinned=false);
+  const t=find(id); if(t)t.pinned=true;
+  save(); close_(); render(); say('اتثبّتت فوق.');
+}
+function unpinWait(id){
+  const t=find(id); if(t)t.pinned=false;
+  save(); close_(); render();
+}
+
+function monthKey(d){return (d||today()).slice(0,7)}
+function countForTitle(title,month){
+  return S.tasks.filter(t=>t.title===title&&t.status==='done'&&t.doneAt&&(!month||monthKey(t.doneAt)===month)).length;
+}
+
+function renderProgress(){
+  const tracked=(S.templates||[]).filter(t=>t.tracked);
+  const mo=monthKey(today());
+  const moName=MON[parseInt(mo.split('-')[1],10)-1];
+  let s='<div class="muted" style="margin-bottom:12px">عدد المرات اللي خلصتها فيها، من غير حكم على أي انقطاع.</div>';
+  if(!tracked.length){
+    s+='<div class="card"><div class="empty">مفيش حاجة بتتابعها دلوقتي.<br>من تاب الصندوق، افتح «تعديل القوالب» وحدد أي قالب عايز تتابعه.</div></div>';
+  }else{
+    s+=tracked.map(t=>{
+      const mCount=countForTitle(t.title,mo), tCount=countForTitle(t.title,null);
+      return '<div class="card"><div class="head"><h2>'+esc(t.title)+'</h2></div>'+
+        '<div class="nowTitle" style="font-size:22px;margin-bottom:2px">'+mCount+'</div>'+
+        '<div class="muted">مرة في '+esc(moName)+'</div>'+
+        (tCount>mCount?'<div class="muted" style="margin-top:6px">من الأول: '+tCount+'</div>':'')+
+        '</div>';
+    }).join('');
+  }
+  document.getElementById('s-progress').innerHTML=s;
+}
+
+function toggleTrack(id){
+  const t=(S.templates||[]).find(x=>x.id===id); if(!t)return;
+  t.tracked=!t.tracked;
+  save();editTemplates();render();
 }
 
 function exportJson(){
@@ -580,8 +813,88 @@ document.getElementById('picker').addEventListener('change',ev=>{
   r.readAsText(f); ev.target.value='';
 });
 
-render();
 
+/* ===== FINAL v4 upgrade: keeps the user's names and data ===== */
+let taskDragId=null;
+function normalizeTags(x){
+  if(Array.isArray(x.tags))return x.tags;
+  if(x.context)return [x.context];
+  return [];
+}
+function upgradeData(){
+  if(!S.templates)S.templates=[];
+  if(!S.tasks)S.tasks=[];
+  if(!S.projects)S.projects=[];
+  S.templates.forEach((t,i)=>{t.order=t.order===undefined?i:t.order;t.tags=normalizeTags(t);if(t.tracked===undefined)t.tracked=false});
+  const addTpl=t=>{if(!S.templates.some(x=>x.id===t.id||x.title===t.title))S.templates.push(t)};
+  addTpl({id:'tpl-penta',order:-2,title:'PENTA',step:'',note:'اشتغل على المرحلة الحالية فقط من مشروع PENTA.',de:'Aktuelle Projektphase bearbeiten.',kind:'core',tracked:true,context:'البيت',tags:['البيت','كمبيوتر','تركيز'],projectId:'project-penta'});
+  addTpl({id:'tpl-serie',order:99,title:'Deutsche Serie ansehen',step:'',note:'شاهد جزءًا من مسلسل ألماني وركّز على الفهم العام من غير توقف كثير.',de:'Einen Teil einer deutschen Serie ansehen.',kind:'extra',tracked:true,context:'البيت',tags:['البيت'],aliases:['Eine deutsche Serie ansehen']});
+  const aliases={
+    tpl1:['telc C1 Hochschule: Vorbereitung','telc Deutsch C1 Hochschule'],
+    tpl2:['Jobsuche','Jobsuche: Nachrichten'],
+    tpl3:['أربعة آلاف أسبوع','4000 اسبوع','كتاب 4000 اسبوع','Viertausend Wochen: Lesen'],
+    tpl4:['Der Fluch des Warum','Deutsche Gedanken: Lesen','Verdammt, warum?: Lesen'],
+    tpl5:['UX Design Sprache','Deutsch im Beruf','D&D: Deutsch im Design'],
+    tpl6:['استماع + Shadowing','Deutsch hören und Shadowing üben','YouTube Hören + Shadowing'],
+    'tpl-penta':['PENTA'],
+    'tpl-serie':['Deutsche Serie ansehen','Eine deutsche Serie ansehen']
+  };
+  S.templates.forEach(t=>{t.aliases=[...new Set([...(t.aliases||[]),...(aliases[t.id]||[])])];t.tags=normalizeTags(t)});
+  S.tasks.forEach((t,i)=>{
+    t.order=t.order===undefined?i:t.order;t.tags=normalizeTags(t);
+    if(!t.templateId){const q=S.templates.find(p=>(p.aliases||[]).some(a=>t.title===a||t.title.indexOf(a+':')===0));if(q)t.templateId=q.id}
+  });
+  const addProject=p=>{if(!S.projects.some(x=>x.id===p.id))S.projects.push(p)};
+  addProject({id:'project-penta',title:'PENTA',templateId:'tpl-penta',active:0,stages:[
+    {title:'المرحلة الحالية',note:'حدّد واكتب خطوة PENTA الحالية قبل إضافتها لليوم.'},
+    {title:'المراجعة',note:'راجع المنطق والتصميم والمخرجات.'},
+    {title:'التسليم',note:'جهّز النسخة النهائية وأرسلها.'}
+  ]});
+  addProject({id:'project-master',title:'الماجستير: التأكد من الملاءمة والأوراق',active:0,stages:[
+    {title:'هل البرنامج مناسب؟',note:'قارن محتوى البرنامج بأهدافك وخلفيتك.'},
+    {title:'شروط القبول واللغة',note:'راجع المؤهل واللغة والمتطلبات الأكاديمية.'},
+    {title:'الأوراق الناقصة',note:'اعمل قائمة واضحة بكل مستند ناقص.'},
+    {title:'المواعيد وطريقة التقديم',note:'راجع الموعد النهائي وخطوات إرسال الطلب.'},
+    {title:'التواصل مع الجامعة',note:'اسأل فقط عن النقاط التي لم تجد لها إجابة واضحة.'}
+  ]});
+  S.version=4;
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+}
+function inDay(t,d){return !!t.date&&((t.endDate&&t.date<=d&&d<=t.endDate)||(!t.endDate&&t.date===d))}
+function ofDay(d,kind){return S.tasks.filter(t=>t.kind===kind&&t.status!=='trash'&&inDay(t,d)).sort((a,b)=>(a.order||0)-(b.order||0))}
+function overdue(){return S.tasks.filter(t=>t.status==='todo'&&['core','extra'].includes(t.kind)&&t.date&&t.date<today()&&!t.endDate)}
+function current(){return core(view).find(t=>t.status!=='done')||extra(view).find(t=>t.status!=='done')||null}
+function tagsHTML(t){return normalizeTags(t).map(x=>'<span class="taskTag">#'+esc(x)+'</span>').join('')+(t.endDate?'<span class="taskTag rangeTag">'+esc(t.date)+' ← '+esc(t.endDate)+'</span>':'')}
+function row(t){
+  const done=t.status==='done',dr=['core','extra'].includes(t.kind);
+  return '<div class="item" data-task="'+t.id+'" '+(dr?'draggable="true" ondragstart="taskDragStart(event,\''+t.id+'\')" ondragover="taskDragOver(event)" ondragleave="taskDragLeave(event)" ondrop="taskDrop(event,\''+t.id+'\')" ondragend="taskDragEnd(event)"':'')+'>'+
+    (dr?'<button class="dragTask" aria-label="اسحب للترتيب">⋮⋮</button>':'')+'<div class="tick '+(done?'on':'')+'" onclick="toggle(\''+t.id+'\')"></div><div class="itemBody"><div class="itemTitle '+(done?'done':'')+'">'+esc(t.title)+'</div>'+((t.step||t.note)&&!done?'<div class="itemSub">'+esc(t.step||t.note)+'</div>':'')+(!done?tagsHTML(t):'')+(t.moved>=3&&!done?'<span class="flag">اتأجلت '+t.moved+' مرات</span>':'')+'</div><button class="dots" onclick="menu(\''+t.id+'\')">···</button></div>';
+}
+function taskDragStart(e,id){taskDragId=id;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move'}
+function taskDragOver(e){e.preventDefault();e.currentTarget.classList.add('dropTarget')}
+function taskDragLeave(e){e.currentTarget.classList.remove('dropTarget')}
+function taskDragEnd(e){e.currentTarget.classList.remove('dragging');document.querySelectorAll('.dropTarget').forEach(x=>x.classList.remove('dropTarget'))}
+function taskDrop(e,target){e.preventDefault();if(!taskDragId||taskDragId===target)return;const a=find(taskDragId),b=find(target);if(!a||!b)return;const arr=S.tasks.filter(x=>x.date===b.date&&x.kind===b.kind&&x.status!=='trash').sort((x,y)=>(x.order||0)-(y.order||0));const from=arr.findIndex(x=>x.id===a.id),to=arr.findIndex(x=>x.id===b.id);if(from<0||to<0)return;arr.splice(to,0,arr.splice(from,1)[0]);arr.forEach((x,i)=>x.order=i);save();render();say('اترتبت.');taskDragId=null}
+function contextChoices(selected){const all=['البيت','برا','مواصلات','انتظار','تركيز','كمبيوتر','موبايل','أي مكان'];return '<div class="tagChoices">'+all.map(x=>'<button type="button" class="tagChoice '+(selected.includes(x)?'on':'')+'" data-tag="'+x+'" onclick="this.classList.toggle(\'on\')">#'+x+'</button>').join('')+'</div>'}
+function editor(t,title){
+  const w=t.kind==='waiting',tags=normalizeTags(t);
+  open_('<h3>'+(title||'تعديل')+'</h3><label for="f1">'+(w?'مستني إيه؟':'المهمة')+'</label><input id="f1" value="'+esc(t.title)+'">'+(w?'':'<label for="f2">الخطوة الأولى</label><input id="f2" value="'+esc(t.step)+'" placeholder="حاجة تعملها في دقيقتين"><div class="muted" style="font-size:12px;margin-top:6px">خلي البداية صغيرة وواضحة.</div><label>المكان والسياق، اختياري</label>'+contextChoices(tags))+'<div class="stack"><button class="b main" onclick="saveEditor(\''+t.id+'\',\''+t.kind+'\',\''+(t.date||'')+'\')">احفظ</button><button class="b quiet" onclick="close_()">إلغاء</button></div>');setTimeout(()=>document.getElementById('f1').focus(),60)
+}
+function saveEditor(id,kind,date){const title=document.getElementById('f1').value.trim();if(!title)return say('اكتب العنوان');const f=document.getElementById('f2'),step=f?f.value.trim():'';const tags=[...document.querySelectorAll('.tagChoice.on')].map(x=>x.dataset.tag);if(id){const t=find(id);t.title=title;t.step=step;t.tags=tags;t.context=tags[0]||'';t.kind=kind;t.date=date}else S.tasks.push({id:uid(),title,step,note:'',de:'',tags,context:tags[0]||'',date,kind,status:'todo',moved:0,order:S.tasks.length,created:today()});save();close_();render()}
+function addTemplateOccurrence(t,date,endDate=''){let kind=t.kind||'extra';if(kind==='core'&&core(date).length>=2)kind='extra';const p=t.projectId?(S.projects||[]).find(x=>x.id===t.projectId):null;const stage=p&&p.stages[p.active];S.tasks.push({id:uid(),templateId:t.id,projectId:t.projectId||'',title:t.title,step:stage?stage.title:(t.step||''),note:stage?stage.note:(t.note||''),de:t.de||'',tags:normalizeTags(t),context:t.context||'',date,endDate,kind,status:'todo',moved:0,spent:0,order:S.tasks.length,created:today()});return kind}
+function applyTemplateRange(id,startDate,endDate){const t=(S.templates||[]).find(x=>x.id===id);if(!t||!startDate)return;let end=endDate||'';if(end&&end<startDate){const z=startDate;startDate=end;end=z}const kind=addTemplateOccurrence(t,startDate,end);save();close_();render();say(end?'اتضافت كمهمة واحدة خلال الفترة.':t.title+' → '+dayLabel(startDate)+(kind==='extra'&&t.kind==='core'?' (إضافي)':''))}
+function advanceProject(t){if(!t.projectId)return;const p=(S.projects||[]).find(x=>x.id===t.projectId);if(p&&p.active<p.stages.length)p.active++}
+function done(id){const t=find(id);if(!t)return;if(tId===id){t.spent=(t.spent||0)+tSec;clearInterval(timer);timer=null;tId=null;tSec=0}t.status='done';t.doneAt=today();advanceProject(t);save();render();say('تمام.')}
+function toggle(id){const t=find(id);if(!t)return;if(t.status==='done'){t.status='todo';delete t.doneAt}else{t.status='done';t.doneAt=today();advanceProject(t)}save();render()}
+function countTemplate(t,month){return S.tasks.filter(x=>x.status==='done'&&x.doneAt&&(!month||monthKey(x.doneAt)===month)&&(x.templateId===t.id||(!x.templateId&&(t.aliases||[]).includes(x.title)))).length}
+function renderProgress(){const tracked=(S.templates||[]).filter(t=>t.tracked),mo=monthKey(today()),moName=MON[parseInt(mo.split('-')[1])-1];let s='<div class="muted" style="margin-bottom:12px">عدد مرات التنفيذ من غير Streak أو ضغط يومي.</div>';s+=tracked.length?tracked.map(t=>{const m=countTemplate(t,mo),all=countTemplate(t,null);return '<div class="card"><div class="head"><h2>'+esc(t.title)+'</h2></div><div class="nowTitle" style="font-size:22px;margin-bottom:2px">'+m+'</div><div class="muted">مرة في '+esc(moName)+'</div><div class="muted" style="margin-top:6px">من الأول: '+all+'</div></div>'}).join(''):'<div class="card"><div class="empty">اختار «تابعها» من تعديل القوالب.</div></div>';document.getElementById('s-progress').innerHTML=s}
+function projectHTML(){const ps=S.projects||[];return '<div class="card"><div class="head"><h2>المشروعات المرحلية</h2></div><div class="muted" style="margin-bottom:8px">كل مشروع يعرض المرحلة الحالية فقط.</div>'+ps.map(p=>{const i=Math.min(p.active||0,p.stages.length),done=i>=p.stages.length,st=p.stages[i];return '<div class="projectStage"><div class="itemTitle '+(done?'stageDone':'')+'">'+esc(p.title)+'</div><div class="itemSub">'+(done?'كل المراحل خلصت.':'المرحلة '+(i+1)+' من '+p.stages.length+': '+esc(st.title))+'</div>'+(!done?'<div class="muted">'+esc(st.note)+'</div>':'')+'</div>'}).join('')+'</div>'}
+function renderBox(){renderBoxBase();const el=document.getElementById('s-box');if(el)el.insertAdjacentHTML('afterbegin',projectHTML())}
+function renderToday(){renderTodayBase();const old=overdue();if(!old.length)return;const el=document.getElementById('s-today');const box='<div class="card overdue"><div class="head"><h2>متأخر</h2><span class="muted">'+old.length+'</span></div><div class="muted">دول مش هيختفوا جوه أيام قديمة.</div>'+old.map(t=>row(t)+'<div class="row" style="margin-bottom:8px"><button class="b small" onclick="moveOverdue(\''+t.id+'\')">انقل لليوم</button><button class="b small" onclick="toBox(\''+t.id+'\')">للصندوق</button></div>').join('')+'</div>';el.insertAdjacentHTML('afterbegin',box)}
+function moveOverdue(id){const t=find(id);if(!t)return;t.date=today();t.endDate='';save();render();say('اتنقلت للنهارده.')}
+
+upgradeData();
+render();
 const FB_KEY='mein_kopf_fb';
 const DEFAULT_FB={
   apiKey:"AIzaSyA9S5V9sWaA_CG6iuNivNMMBmx28MM06lo",
@@ -612,7 +925,7 @@ function startSync(){
   db.ref(FB_PATH).once('value').then(function(snap){
     const cloud=snap.val();
     if(cloud&&cloud.tasks&&cloud.tasks.length){
-      S=cloud;if(!S.templates)S.templates=SEED.templates;
+      S=cloud;if(!S.templates)S.templates=SEED.templates;upgradeData();
       try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
       render();
     }else{
@@ -622,7 +935,7 @@ function startSync(){
       if(Date.now()-_lastSave<3000)return;
       const nd=s2.val();
       if(nd&&nd.tasks&&JSON.stringify(nd)!==JSON.stringify(S)){
-        S=nd;if(!S.templates)S.templates=SEED.templates;
+        S=nd;if(!S.templates)S.templates=SEED.templates;upgradeData();
         try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
         render();say('اتحدّثت من جهاز تاني.');
       }
